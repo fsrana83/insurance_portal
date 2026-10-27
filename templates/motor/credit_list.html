@@ -1,0 +1,13 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Credit control{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Credit control</h1><p>Approve or reject instalment requests. A second person must decide: not the one who requested.</p></div></div>
+<section class="panel flush"><div class="panel__head"><h2>Awaiting decision</h2></div>
+{% if pending %}<div class="tablewrap"><table><thead><tr><th>Request</th><th>Proposal</th><th>Customer</th><th class="r">Premium</th><th class="r">Instalments</th><th class="r">Advance</th><th>Requested by</th><th>Decision</th></tr></thead><tbody>
+{% for c in pending %}<tr><td>{{ c.uid }}{% if c.is_new %} <span class="badge warn">NEW</span>{% endif %}<br><small>{{ c.requested_on|date:"d M H:i" }}</small></td><td><a href="{% url 'quote_detail' c.proposal.pk %}">{{ c.proposal.number }}</a></td><td>{{ c.proposal.customer.name }}</td><td class="r">{{ c.proposal.total_payable|money:c.proposal.currency }}</td><td class="r">{{ c.installments }}</td><td class="r">{{ c.advance_amount|money:c.proposal.currency }}</td><td>{{ c.requested_by.get_username }}<br><small>{{ c.request_note }}</small></td>
+<td><form method="post" class="actions">{% csrf_token %}<input class="input" name="note" placeholder="Note (required to reject)" style="max-width:200px"><button class="btn small" formaction="{% url 'credit_decide' c.pk 'approve' %}">Approve</button><button class="btn ghost small" formaction="{% url 'credit_refer' c.pk %}">Refer back</button><button class="btn danger small" formaction="{% url 'credit_decide' c.pk 'reject' %}">Reject</button></form></td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>Nothing waiting</strong>Credit requests appear here.</div>{% endif %}</section>
+<section class="panel flush" style="margin-top:18px"><div class="panel__head"><h2>Decided</h2></div>
+{% if decided %}<div class="tablewrap"><table><thead><tr><th>Proposal</th><th>Customer</th><th>Status</th><th class="r">Instalments</th><th>Decided by</th><th>Note</th></tr></thead><tbody>
+{% for c in decided %}<tr><td><a href="{% url 'quote_detail' c.proposal.pk %}">{{ c.proposal.number }}</a> <small>{{ c.uid }}</small></td><td>{{ c.proposal.customer.name }}</td><td><span class="badge {% if c.status == 'APPROVED' %}ok{% else %}bad{% endif %}">{{ c.get_status_display }}</span></td><td class="r">{{ c.installments }}</td><td>{{ c.decided_by.get_username }}</td><td>{{ c.decision_note }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><strong>No decisions yet</strong></div>{% endif %}</section>
+{% endblock %}

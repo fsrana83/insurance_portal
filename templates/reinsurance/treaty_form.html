@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ title }}</h1>{% if modify %}<p>Active treaties are never edited in place. Saving creates a new version with its own effective date and keeps the old one.</p>{% endif %}</div></div>
+<form method="post" class="panel" novalidate>{% csrf_token %}{% include "includes/errors.html" %}
+<div class="fields">
+{% include "includes/field.html" with field=form.name w="w-6" %}{% include "includes/field.html" with field=form.reference w="w-3" %}{% include "includes/field.html" with field=form.rank w="w-3" %}
+{% include "includes/field.html" with field=form.treaty_type w="w-4" %}{% include "includes/field.html" with field=form.reinsurer w="w-4" %}
+{% include "includes/field.html" with field=form.effective_from w="w-4" %}{% include "includes/field.html" with field=form.effective_to w="w-4" %}
+{% include "includes/field.html" with field=form.covers w="w-12" group=1 %}
+{% include "includes/field.html" with field=form.cession_pct w="w-4" %}{% include "includes/field.html" with field=form.qs_limit w="w-4" %}{% include "includes/field.html" with field=form.retention w="w-4" %}{% include "includes/field.html" with field=form.capacity w="w-4" %}
+{% include "includes/field.html" with field=form.business w="w-4" %}{% include "includes/field.html" with field=form.pnc_groups w="w-8" %}{% include "includes/field.html" with field=form.xol_kind w="w-12" %}{% include "includes/field.html" with field=form.xol_retention w="w-4" %}{% include "includes/field.html" with field=form.xol_limit w="w-4" %}{% include "includes/field.html" with field=form.aad w="w-4" %}{% include "includes/field.html" with field=form.aal w="w-4" %}{% include "includes/field.html" with field=form.sl_attach_pct w="w-4" %}{% include "includes/field.html" with field=form.sl_limit_pct w="w-4" %}{% include "includes/field.html" with field=form.reinstatements w="w-4" %}{% include "includes/field.html" with field=form.reinstatement_pct w="w-4" %}{% include "includes/field.html" with field=form.est_gnrpi w="w-4" %}{% include "includes/field.html" with field=form.premium_basis w="w-4" %}{% include "includes/field.html" with field=form.bc_years w="w-4" %}{% include "includes/field.html" with field=form.bc_loading w="w-4" %}{% include "includes/field.html" with field=form.bc_min_rate w="w-4" %}{% include "includes/field.html" with field=form.bc_max_rate w="w-4" %}
+{% include "includes/field.html" with field=form.rate_pct w="w-4" %}{% include "includes/field.html" with field=form.deposit_pct w="w-4" %}{% include "includes/field.html" with field=form.installments w="w-4" %}
+{% if note %}{% include "includes/field.html" with field=note.note w="w-12" %}{% endif %}
+</div>
+<div class="actions" style="margin-top:18px"><button class="btn" type="submit">{% if modify %}Create new version{% else %}Create treaty{% endif %}</button><a class="btn ghost" href="{% url 'treaty_list' %}">Cancel</a></div>
+</form>
+{% endblock %}

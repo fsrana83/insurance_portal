@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Endorse {{ p.policy_no }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{% if can_apply %}Endorse{% else %}Request a change to{% endif %} {{ p.policy_no }}</h1><p>See the premium effect before you confirm. Amounts are in {{ p.currency.code }}.</p></div></div>
+<div class="grid side">
+<form method="post" id="endorse-form" class="panel" novalidate>{% csrf_token %}
+{% include "includes/errors.html" %}
+<div class="fields">
+{% include "includes/field.html" with field=form.endorsement_type w="w-8" %}
+{% include "includes/field.html" with field=form.effective_date w="w-4" %}
+{% include "includes/field.html" with field=form.risk w="w-12" %}
+{% include "includes/field.html" with field=form.new_end_date w="w-4" %}
+{% include "includes/field.html" with field=form.new_engine_no w="w-4" %}
+{% include "includes/field.html" with field=form.new_color w="w-4" %}
+{% include "includes/field.html" with field=form.new_owner w="w-8" %}
+{% include "includes/field.html" with field=form.accessories_value w="w-4" %}
+{% include "includes/field.html" with field=form.accessories_note w="w-8" %}
+{% include "includes/field.html" with field=form.new_plate_code w="w-4" %}
+{% include "includes/field.html" with field=form.new_plate_number w="w-4" %}
+{% include "includes/field.html" with field=form.driver_name w="w-4" %}
+{% include "includes/field.html" with field=form.driver_licence w="w-4" %}
+{% include "includes/field.html" with field=form.driver_dob w="w-4" %}
+{% include "includes/field.html" with field=form.driver_nationality w="w-4" %}
+{% include "includes/field.html" with field=form.driver_relationship w="w-4" %}
+{% include "includes/field.html" with field=form.new_usage w="w-12" group=1 %}
+</div>
+<div class="actions" style="margin-top:18px"><button class="btn ghost" type="submit">Calculate premium effect</button>
+{% if quote and can_apply %}<button class="btn gold" type="submit" name="confirm" value="1">Apply endorsement</button>{% endif %}<a class="btn ghost" href="{% url 'policy_detail' p.pk %}">Cancel</a></div>
+</form>
+<aside class="summary"><h2>Effect</h2>
+{% if quote %}
+<div class="row"><span>{% if quote.adjustment < 0 %}Refund{% else %}Additional premium{% endif %}</span><span>{{ quote.adjustment|money:p.currency }}</span></div>
+<div class="row"><span>Admin fee</span><span>{{ quote.fee|money:p.currency }}</span></div>
+<div class="row"><span>VAT</span><span>{{ quote.tax|money:p.currency }}</span></div>
+<div class="total"><span>{% if quote.total < 0 %}Refund due{% else %}To pay{% endif %}</span><strong>{{ quote.total|money:p.currency }}</strong></div>
+<p class="note">{{ quote.remaining_days }} days of cover remain at the effective date. Premium is pro rata.</p>
+{% else %}<p class="note">Choose the change and calculate to see the refund or additional premium.</p>{% endif %}
+</aside></div>
+{% endblock %}
+{% block scripts %}<script>window.MotorPAS && MotorPAS.setCurrency("{{ p.currency.code }}");</script>{% endblock %}

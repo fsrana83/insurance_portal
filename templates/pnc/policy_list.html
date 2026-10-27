@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}P&C policies{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>P&amp;C policies and quotes</h1></div>{% if nav.new_quote %}<a class="btn" href="{% url 'pnc_policy_new' %}">New quote</a>{% endif %}</div>
+<form method="get" class="actions" style="margin-bottom:12px"><input class="input" name="q" value="{{ q }}" placeholder="Number or customer" style="max-width:220px">
+<select class="input" name="status" style="max-width:170px"><option value="">All statuses</option>{% for k, v in statuses %}<option value="{{ k }}" {% if k == st %}selected{% endif %}>{{ v }}</option>{% endfor %}</select>
+<select class="input" name="group" style="max-width:190px"><option value="">All groups</option>{% for k, v in groups %}<option value="{{ k }}" {% if k == g %}selected{% endif %}>{{ v }}</option>{% endfor %}</select><button class="btn ghost">Filter</button></form>
+<div class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr><th>Number</th><th>Customer</th><th>Class</th><th>Period</th><th>Status</th><th class="r">Premium</th><th>Payment</th></tr></thead><tbody>
+{% for p in rows %}<tr><td><a href="{% url 'pnc_policy_detail' p.pk %}">{{ p.number }}</a></td><td>{{ p.customer.name }}</td><td>{{ p.pnc_class.name }}</td><td>{{ p.start_date|date:"d M Y" }} – {{ p.end_date|date:"d M Y" }}</td><td>{{ p.get_status_display }}</td><td class="r">{{ p.total_payable|money:p.currency }}</td><td>{% if p.is_issued %}{{ p.payment_status }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No P&amp;C policies</strong></div>{% endif %}</div>
+{% endblock %}

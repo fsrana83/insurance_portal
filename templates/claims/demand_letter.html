@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Subrogation demand{% endblock %}
+{% block content %}<div class="noprint actions" style="margin-bottom:12px"><button class="btn" onclick="window.print()">Print</button></div>
+<div class="letter"><p>{{ today|date:"d F Y" }}</p><p><strong>{{ sub.liable_party }}</strong>{% if sub.liable_insurer %}<br>c/o {{ sub.liable_insurer }}{% endif %}</p>
+<h1>Notice of subrogation claim: {{ c.claim_no }}</h1>
+<p>Our insured, {{ c.policy.customer.name }}, suffered a loss on {{ c.date_of_loss|date:"d F Y" }} involving vehicle {{ c.risk.make }} {{ c.risk.model }} ({{ c.risk.plate }}) under policy {{ c.policy.policy_no }}. {% if c.police_report_no %}Royal Oman Police report {{ c.police_report_no }}.{% endif %}</p>
+<p>The loss was caused by the party you are responsible for. We have paid {{ c.net_payable|money_text:cur }} under the policy and, as the insured's subrogated insurer, we demand reimbursement of <strong>{{ sub.reserve_amount|money_text:cur }}</strong>, plus the insured's excess of {{ c.excess_applied|money_text:cur }} where it applies.</p>
+<p>Please settle within 30 days of this letter or confirm the name of your insurer. Otherwise we will refer the matter to legal counsel.</p><p>Claims Department</p></div>{% endblock %}

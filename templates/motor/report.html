@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{% url 'reports' %}">&larr; All reports</a></p>
+<div class="pagehead"><div><h1>{{ title }}</h1></div>{% if not waiting %}<div class="actions"><a class="btn ghost" href="?{{ request.GET.urlencode }}&format=csv">CSV</a></div>{% endif %}</div>
+<form class="filters" method="get"><input type="hidden" name="type" value="{{ kind }}"><input type="hidden" name="run" value="1">
+<label>From <input class="input" type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" required></label><label>To <input class="input" type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" required></label>
+<button class="btn" type="submit">Run report</button></form>
+{% if waiting %}<div class="panel"><div class="empty"><strong>{% if error %}{{ error }}{% else %}Choose a period and run the report{% endif %}</strong>Nothing is shown until you select the period and press <em>Run report</em>.</div></div>
+{% else %}<div class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr>{% for c in cols %}<th>{{ c }}</th>{% endfor %}</tr></thead><tbody>{% for r in rows %}<tr>{% for v in r %}<td>{{ v }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No data in this period</strong>Widen the date range.</div>{% endif %}</div>{% endif %}
+{% endblock %}

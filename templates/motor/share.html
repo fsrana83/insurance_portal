@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Send documents — {{ p.policy_no }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Send documents for {{ p.policy_no }}</h1><p>Tick the PDFs to send, then choose how. Outlook opens a ready-made draft with the PDFs attached; WhatsApp opens the desktop app with a secure download link.</p></div></div>
+<form method="post" class="panel" novalidate>{% csrf_token %}
+<div class="fields">
+<div class="field w-12"><span class="lbl">Documents</span><div style="display:grid;gap:6px">{% for k, label in docs %}<label class="check"><input type="checkbox" name="docs" value="{{ k }}" {% if k in selected %}checked{% endif %}> {{ label }} <a href="{% url 'policy_document' p.pk k %}" target="_blank" rel="noopener" class="help">preview</a></label>{% endfor %}</div></div>
+<div class="field w-6"><label for="email">Recipient e-mail</label><input class="input" id="email" type="email" name="email" value="{{ email }}"></div>
+<div class="field w-6"><label for="phone">Recipient mobile (WhatsApp)</label><input class="input" id="phone" name="phone" value="{{ phone }}" placeholder="9912 3456 or +968…"></div>
+<div class="field w-12"><label for="subject">Subject</label><input class="input" id="subject" name="subject" value="{{ subject }}"></div>
+<div class="field w-12"><label for="message">Message</label><textarea class="textarea" id="message" name="message" rows="5">{{ message }}</textarea></div></div>
+<div class="actions" style="margin-top:16px"><button class="btn" name="action" value="outlook" type="submit">Outlook draft (.eml)</button>
+<button class="btn gold" name="action" value="whatsapp" type="submit">WhatsApp</button><button class="btn ghost" name="action" value="email" type="submit">E-mail from server</button>
+<a class="btn ghost" href="{% url 'policy_detail' p.pk %}">Back</a></div>
+{% if wa_desktop %}<div class="msg success" style="margin-top:16px"><strong>WhatsApp message ready for {{ wa_phone }}.</strong>
+<div class="actions" style="margin-top:8px"><a class="btn gold" href="{{ wa_desktop }}">Open WhatsApp Desktop</a><a class="btn ghost" href="{{ wa_web }}" target="_blank" rel="noopener">Open WhatsApp Web</a></div>
+<p class="help">WhatsApp cannot attach files automatically, so the message carries a secure link ({{ wa_link }}) that expires. The customer downloads the PDFs from it.</p></div>{% endif %}
+<p class="help" style="margin-top:12px">Outlook: double-click the downloaded .eml in classic Outlook to open it as an editable draft with the PDFs attached. The "new" Outlook for Windows does not open .eml drafts.</p>
+</form>
+{% endblock %}

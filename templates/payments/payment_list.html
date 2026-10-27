@@ -1,0 +1,11 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Receipts &amp; payments{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Receipts &amp; payments</h1><p>Receipt vouchers and online payment requests. Online payments use the demo gateway until a live gateway is configured.</p></div></div>
+<form class="filters" method="get"><input class="input" name="q" value="{{ q }}" placeholder="Receipt, policy or customer"><select class="select" name="status" aria-label="Status"><option value="">All statuses</option>{% for k, l in statuses %}<option value="{{ k }}" {% if status == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><button class="btn ghost" type="submit">Filter</button></form>
+<div class="panel flush">{% if payments %}<div class="tablewrap"><table><thead><tr><th>Receipt / request</th><th>Date</th><th>Policy</th><th>Customer</th><th>Method</th><th>Status</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+{% for x in payments %}<tr><td>{{ x.receipt_no|default:x.number }}</td><td>{{ x.paid_at|default:x.created_at|date:"d M Y" }}</td><td><a href="{% url 'policy_detail' x.policy_id %}">{{ x.policy.policy_no }}</a></td><td>{{ x.customer.name }}</td><td>{{ x.get_method_display }}</td>
+<td><span class="badge {% if x.status == 'PAID' %}ok{% elif x.status == 'PENDING' %}info{% else %}bad{% endif %}">{{ x.get_status_display }}</span></td><td class="r">{{ x.amount|money:x.currency }}</td>
+<td class="r">{% if x.status == 'PAID' %}<a class="btn ghost small" href="{% url 'receipt_download' x.pk %}" target="_blank" rel="noopener">PDF</a>{% elif x.status == 'PENDING' %}<a class="btn ghost small" href="{% url 'payment_share' x.pk %}">Send link</a>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No payments found</strong></div>{% endif %}</div>
+{% endblock %}

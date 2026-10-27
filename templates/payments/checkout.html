@@ -1,0 +1,14 @@
+<!doctype html>{% load static money %}<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Secure payment</title><link rel="stylesheet" href="{% static 'css/app.css' %}"></head>
+<body style="background:var(--paper,#f6f8f8)"><main class="checkout"><section class="panel">
+<h1 style="font-size:1.25rem">{{ company.name }}</h1>
+{% if pay.status == 'PAID' %}<div class="msg success">Payment received. Thank you.</div><p>Receipt <strong>{{ pay.receipt_no }}</strong></p><a class="btn" href="{% url 'pay_receipt' pay.token %}">Download receipt (PDF)</a>
+{% elif pay.status != 'PENDING' or pay.is_expired %}<div class="msg warning">This payment link is no longer valid ({{ pay.get_status_display|lower }}). Please contact your insurer for a new one.</div>
+{% else %}<p>Policy <strong>{{ pay.policy.policy_no }}</strong> · {{ pay.customer.name }}</p>
+<div class="summary" style="margin:10px 0"><div class="total"><span>Amount due</span><strong>{{ pay.amount|money:pay.currency }}</strong></div></div>
+{% if gw.is_test %}<div class="demo-ribbon"><strong>Demo gateway.</strong> No real money moves. Use a test card:
+<ul style="margin:6px 0 0 16px">{% for n, d in test_cards %}<li><code>{{ n }}</code> — {{ d }}</li>{% endfor %}</ul>Any future expiry, any 3-digit CVV.</div>{% endif %}
+{% if error %}<div class="msg error" role="alert">{{ error }}</div>{% endif %}
+<form method="post" novalidate>{% csrf_token %}{% include "includes/errors.html" %}<div class="fields">
+{% include "includes/field.html" with field=form.holder w="w-12" %}{% include "includes/field.html" with field=form.number w="w-12" %}{% include "includes/field.html" with field=form.expiry w="w-6" %}{% include "includes/field.html" with field=form.cvv w="w-6" %}</div>
+<button class="btn gold" type="submit" style="margin-top:14px;width:100%">Pay {{ pay.amount|money:pay.currency }}</button></form>{% endif %}
+</section></main></body></html>

@@ -1,0 +1,54 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Register claim{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Register a claim</h1><p>The excess is worked out from the policy and the driver details. The claim is checked against the period of cover.</p></div></div>
+<form method="post" enctype="multipart/form-data" class="panel" id="claim-form" data-estimate="{% url 'claim_estimate' %}" data-risk-info="{% url 'risk_info' 0 %}" novalidate>{% csrf_token %}
+{% include "includes/errors.html" %}
+<div class="fields">
+<div class="field w-6" id="pol-picker" data-search="{% url 'policy_search' %}" data-vehicles="{% url 'policy_vehicles' 0 %}">
+<label for="pol-q">Policy</label>{{ form.policy }}
+<div class="picker" id="pol-search"><input class="input" id="pol-q" type="search" autocomplete="off" placeholder="Policy no., insured name / ID / mobile, plate or chassis" aria-label="Search policy"><ul class="picker__list" id="pol-results" hidden></ul></div>
+<div class="picker__chosen" id="pol-chosen" hidden><span><strong id="pol-name"></strong> <small id="pol-meta"></small></span><button type="button" class="btn ghost small" id="pol-clear">Change policy</button></div>
+{% if form.policy.errors %}<p class="errorlist">{{ form.policy.errors.0 }}</p>{% endif %}</div>
+<div class="field w-6" id="risk-field"><label for="id_risk">Vehicle</label>{{ form.risk }}
+<div class="vehicle-card" id="vehicle-card" hidden></div>
+{% if form.risk.errors %}<p class="errorlist">{{ form.risk.errors.0 }}</p>{% endif %}</div>
+{% include "includes/field.html" with field=form.date_of_loss w="w-4" %}
+{% include "includes/field.html" with field=form.loss_type w="w-4" %}
+{% include "includes/field.html" with field=form.estimated_damage w="w-4" %}
+{% include "includes/field.html" with field=form.driver w="w-8" %}
+<div class="field w-4" style="align-content:end"><label class="check">{{ form.is_total_loss }} Total loss</label><div class="help">Value = depreciated market value, capped at the sum insured.</div></div>
+<div class="field w-12" id="tl-info" hidden><div class="msg info"></div></div>
+{% include "includes/field.html" with field=form.cause_of_loss w="w-12" %}
+{% include "includes/field.html" with field=form.location w="w-6" %}
+{% include "includes/field.html" with field=form.governorate w="w-3" %}
+{% include "includes/field.html" with field=form.police_report_no w="w-3" %}
+{% include "includes/field.html" with field=form.driver_age w="w-4" %}
+<div class="field w-8" style="display:grid;gap:8px;align-content:end">
+<label class="check">{{ form.young_driver }} {{ form.young_driver.label }}</label>
+<label class="check">{{ form.undisclosed_driver }} {{ form.undisclosed_driver.label }}</label>
+<label class="check">{{ form.third_party_liable }} {{ form.third_party_liable.label }}</label></div>
+<div class="field w-12" id="subro-fields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px"><div style="grid-column:1/-1" class="help">If another party is at fault, give their insurer's details: a notice with the damage details is sent when the claim is opened.</div>
+{% for fld in form %}{% if fld.name == "liable_party" or fld.name == "liable_insurer" or fld.name == "liable_insurer_email" or fld.name == "their_policy_no" or fld.name == "their_vehicle" or fld.name == "their_claim_ref" %}<div class="field">{{ fld.label_tag }}{{ fld }}{{ fld.errors }}</div>{% endif %}{% endfor %}</div>
+{% include "includes/flex.html" with fl=form.flex_claim %}
+</div>
+<section class="panel form-section" style="margin-top:18px"><header><h2>Damage map &amp; repair estimate</h2><p>Tap each damaged panel to set its severity, then ask for an estimate. The figure comes from your own approved claims, reviewed by a local AI model if you pick one.</p></header>
+{% include "includes/damage_map.html" %}
+{{ form.damage_zones }}{{ form.ai_estimate_json }}
+<div class="ai-panel" id="ai-panel"><div class="fields">
+{% include "includes/field.html" with field=form.ai_model w="w-6" %}{% include "includes/field.html" with field=form.damage_notes w="w-6" %}</div>
+<div class="actions" style="margin-top:10px"><button type="button" class="btn gold" id="ai-run">Estimate repair cost</button>
+<button type="button" class="btn ghost" id="ai-use" hidden>Use as estimated damage</button></div>
+<div class="ai-out" id="ai-out" aria-live="polite"></div></div></section>
+<div class="fields" style="margin-top:18px">
+{% include "includes/field.html" with field=form.photos w="w-6" %}
+{% include "includes/field.html" with field=form.police_report w="w-6" %}
+</div>
+</div>
+<div class="actions" style="margin-top:18px"><button class="btn" type="submit">Register claim</button><a class="btn ghost" href="{% url 'claim_list' %}">Cancel</a></div>
+</form>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/extras.js' %}"></script><script>
+(function(){var s=document.getElementById("id_policy");if(!s)return;
+s.addEventListener("policycurrency",function(e){if(window.MotorPAS&&e.detail)MotorPAS.setCurrency(e.detail);});})();
+</script>{% endblock %}

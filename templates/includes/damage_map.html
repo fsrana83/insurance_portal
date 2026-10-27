@@ -1,0 +1,26 @@
+{# Top-down vehicle drawing. Front is at the top. Click a panel to cycle Minor -> Moderate -> Severe -> none. #}
+<div class="dmap" id="damage-map" data-readonly="{{ readonly|default:'' }}" data-zones='{{ zone_json|default:"{}" }}'>
+<svg viewBox="0 0 220 420" role="group" aria-label="Vehicle damage map">
+  <rect class="dm-wheel" x="30" y="60" width="14" height="44" rx="5"/><rect class="dm-wheel" x="176" y="60" width="14" height="44" rx="5"/>
+  <rect class="dm-wheel" x="30" y="290" width="14" height="44" rx="5"/><rect class="dm-wheel" x="176" y="290" width="14" height="44" rx="5"/>
+  <path class="dm-zone" data-zone="front_bumper" d="M62 16h96q14 0 16 22v8H46v-8q2-22 16-22z"/>
+  <path class="dm-zone" data-zone="hood" d="M60 52h100l6 82H54z"/>
+  <path class="dm-zone" data-zone="windscreen" d="M54 138h112l-10 38H64z"/>
+  <path class="dm-zone" data-zone="roof" d="M64 180h92v82H64z"/>
+  <path class="dm-zone" data-zone="rear_glass" d="M64 266h92l10 36H54z"/>
+  <path class="dm-zone" data-zone="trunk" d="M54 306h112l-6 76H60z"/>
+  <path class="dm-zone" data-zone="rear_bumper" d="M48 386h124v10q-2 14-16 14H64q-14 0-16-14z"/>
+  <path class="dm-zone" data-zone="fl_wing" d="M44 54l12 2-4 80H42q-4-40 2-82z"/>
+  <path class="dm-zone" data-zone="fl_door" d="M42 140h10l2 66H42z"/>
+  <path class="dm-zone" data-zone="rl_door" d="M42 210h12l2 64H42z"/>
+  <path class="dm-zone" data-zone="rl_quarter" d="M42 278h12l-2 100H44q-6-50-2-100z"/>
+  <path class="dm-zone" data-zone="fr_wing" d="M176 54l-12 2 4 80h10q4-40-2-82z"/>
+  <path class="dm-zone" data-zone="fr_door" d="M178 140h-10l-2 66h12z"/>
+  <path class="dm-zone" data-zone="rr_door" d="M178 210h-12l-2 64h14z"/>
+  <path class="dm-zone" data-zone="rr_quarter" d="M178 278h-12l2 100h8q6-50 2-100z"/>
+  <text x="110" y="10" class="dm-lbl" text-anchor="middle">FRONT</text><text x="110" y="418" class="dm-lbl" text-anchor="middle">REAR</text>
+  <text x="6" y="210" class="dm-lbl" transform="rotate(-90 6 210)" text-anchor="middle">LEFT</text><text x="214" y="210" class="dm-lbl" transform="rotate(90 214 210)" text-anchor="middle">RIGHT</text>
+</svg>
+<div class="dmap__side"><div class="dmap__legend"><span><i class="s1"></i>Minor</span><span><i class="s2"></i>Moderate</span><span><i class="s3"></i>Severe</span></div>
+<ul class="dmap__list" id="damage-list" aria-live="polite"></ul></div>
+</div>

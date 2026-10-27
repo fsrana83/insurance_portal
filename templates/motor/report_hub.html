@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Reports</h1><p>Pick a report, choose the period and run it. Nothing is calculated until you do.</p></div></div>
+{% for group, cards in groups.items %}
+<h2 class="hub-group">{{ group }}</h2>
+<div class="hub">{% for c in cards %}<a class="hub-card" href="{{ c.url }}"><strong>{{ c.title }}</strong><span>{{ c.desc }}</span><em>Open &rarr;</em></a>{% endfor %}</div>
+{% endfor %}
+{% endblock %}

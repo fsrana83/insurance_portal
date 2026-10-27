@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Premium register{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Premium register</h1><p>Every policy issued, endorsement and cancellation in the period. Base-currency columns use the rate at issuance.</p></div>
+{% if not waiting %}<div class="actions"><a class="btn ghost" href="?{{ request.GET.urlencode }}&format=csv">CSV</a><a class="btn" href="?{{ request.GET.urlencode }}&format=xlsx">Excel</a></div>{% endif %}</div>
+<p class="crumb"><a href="{% url 'reports' %}">&larr; All reports</a></p>
+<form class="filters" method="get"><input type="hidden" name="run" value="1">
+<input class="input" type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" aria-label="From" required><input class="input" type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" aria-label="To" required>
+<select class="select" name="product" aria-label="Product"><option value="">All products</option>{% for x in products %}<option value="{{ x.pk }}" {% if f.product == x.pk|stringformat:"s" %}selected{% endif %}>{{ x.name }}</option>{% endfor %}</select>
+<select class="select" name="producer" aria-label="Producer"><option value="">All producers</option>{% for x in producers %}<option value="{{ x.pk }}" {% if f.producer == x.pk|stringformat:"s" %}selected{% endif %}>{{ x.get_username }}</option>{% endfor %}</select>
+<select class="select" name="currency" aria-label="Currency"><option value="">All currencies</option>{% for x in currencies %}<option value="{{ x.pk }}" {% if f.currency == x.pk|stringformat:"s" %}selected{% endif %}>{{ x.code }}</option>{% endfor %}</select>
+<button class="btn" type="submit">Run report</button></form>
+{% if waiting %}<div class="panel"><div class="empty"><strong>{% if error %}{{ error }}{% else %}Choose a period and run the report{% endif %}</strong>Nothing is shown until you select the period and press <em>Run report</em>.</div></div>{% else %}
+<div class="figs" style="margin-bottom:14px"><div class="fig"><div class="label">Lines</div><div class="value">{{ n }}</div></div>
+<div class="fig"><div class="label">Net premium (OMR)</div><div class="value">{{ totals.net|floatformat:"3g" }}</div></div>
+<div class="fig"><div class="label">Total incl. VAT (OMR)</div><div class="value">{{ totals.total|floatformat:"3g" }}</div></div>
+<div class="fig"><div class="label">Commission (OMR)</div><div class="value">{{ totals.comm|floatformat:"3g" }}</div></div>
+<div class="fig"><div class="label">Ceded (OMR)</div><div class="value">{{ totals.ceded|floatformat:"3g" }}</div></div></div>
+<div class="panel flush"><div class="tablewrap"><table><thead><tr>{% for c in cols %}<th {% if forloop.counter0 >= 8 %}class="r"{% endif %}>{{ c }}</th>{% endfor %}</tr></thead><tbody>
+{% for row in rows %}<tr>{% for c in row %}{% if forloop.counter0 >= 8 %}<td class="r">{{ c|floatformat:"3g" }}</td>{% elif forloop.counter0 == 0 %}<td>{{ c|date:"d M Y" }}</td>{% else %}<td>{{ c }}</td>{% endif %}{% empty %}{% endfor %}</tr>{% empty %}<tr><td colspan="{{ cols|length }}"><div class="empty"><strong>No transactions in this period</strong></div></td></tr>{% endfor %}
+</tbody></table></div></div>{% endif %}
+{% if truncated and not waiting %}<p class="help">Showing the first 2,000 of {{ n }} lines. Export to CSV or Excel for everything.</p>{% endif %}
+{% endblock %}

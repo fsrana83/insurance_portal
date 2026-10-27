@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ title }}</h1><p>{{ total }} rows{% if total > 1000 %} (first 1000 shown; download the CSV for all){% endif %}</p></div><a class="btn ghost" href="?csv=1">Download CSV</a></div>
+<div class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr>{% for h in head %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>{% for r in rows %}<tr>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><strong>No data</strong></div>{% endif %}</div>
+{% endblock %}

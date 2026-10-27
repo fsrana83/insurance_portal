@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Service providers{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Service providers</h1><p>Garages are rated after every repair on turnaround, cost against estimate, customer feedback and re-work.</p></div></div>
+<div class="chips" style="margin-bottom:14px">{% for v, l in types %}<a class="chip" href="?type={{ v }}" {% if v == ptype %}aria-current="true"{% endif %}>{{ l }}</a>{% endfor %}</div>
+<div class="grid {% if can_edit %}side{% endif %}">
+<div class="panel flush">{% if providers %}<div class="tablewrap"><table><thead><tr><th>Name</th><th>Governorate</th><th>Panel</th>{% if ptype == 'HOSPITAL' %}<th class="r">Room cap / day</th>{% endif %}<th class="r">Rating</th></tr></thead><tbody>
+{% for p in providers %}<tr><td>{{ p.name }}<br><small>{{ p.phone }}</small></td><td>{{ p.governorate|default:"—" }}</td><td>{% if p.preferred %}<span class="badge info">Preferred</span>{% else %}Non-preferred{% endif %}</td>{% if ptype == 'HOSPITAL' %}<td class="r">{{ p.room_cap_per_day|money:"OMR" }}</td>{% endif %}<td class="r">{% if p.average_score %}<strong>{{ p.average_score }}</strong> / 5{% else %}—{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No providers of this type</strong>Add the first one.</div>{% endif %}</div>
+{% if can_edit %}<section class="panel"><h2>Add a provider</h2><form method="post" class="fields">{% csrf_token %}{% for f in form %}{% if f.name == 'preferred' or f.name == 'active' %}<div class="field w-12"><label class="check">{{ f }} {{ f.label }}</label></div>{% else %}{% include "includes/field.html" with field=f w="w-12" %}{% endif %}{% endfor %}<div class="field w-12"><button class="btn" type="submit">Add provider</button></div></form></section>{% endif %}
+</div>
+{% endblock %}

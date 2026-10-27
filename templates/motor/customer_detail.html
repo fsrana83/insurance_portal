@@ -1,0 +1,23 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}{{ c.name }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ c.name }}</h1><p>{{ c.get_customer_type_display }} · {{ c.identifier|default:"no ID on file" }} · {{ c.phone|default:"no phone" }} · {{ c.email|default:"no e-mail" }}</p></div>
+<div class="actions"><a class="btn" href="{% url 'quote_create' %}?customer={{ c.pk }}">Issue new policy</a></div></div>
+<section class="panel flush"><div class="panel__head"><h2>Policies ({{ policies|length }})</h2></div>
+{% if policies %}<div class="tablewrap"><table><thead><tr><th>Policy</th><th>Product</th><th>Vehicle(s)</th><th>Period</th><th>Status</th><th class="r">Total</th><th></th></tr></thead><tbody>
+{% for p in policies %}<tr><td><a href="{% url 'policy_detail' p.pk %}">{{ p.policy_no }}</a></td><td>{{ p.product.name }}</td>
+<td>{% for r in p.risks.all %}{{ r.make }} {{ r.model }} <small>({{ r.plate_code }} {{ r.plate_number }})</small>{% if not forloop.last %}, {% endif %}{% endfor %}</td>
+<td>{{ p.start_date|date:"d M Y" }} – {{ p.end_date|date:"d M Y" }}</td><td><span class="badge {% if p.status == 'ACTIVE' %}ok{% elif p.status == 'EXPIRED' %}warn{% else %}bad{% endif %}">{{ p.get_status_display }}</span></td>
+<td class="r">{{ p.total_payable|money:p.currency }}</td>
+<td class="r">{% if p.status == "ACTIVE" or p.status == "EXPIRED" %}<a class="btn ghost small" href="{% url 'policy_detail' p.pk %}">Renew / endorse</a>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No policies yet</strong></div>{% endif %}</section>
+<section class="panel flush"><div class="panel__head"><h2>Broker / agent</h2></div><div class="tablewrap"><table><thead><tr><th>Broker / agent</th><th>From</th><th>To</th><th>Note</th></tr></thead><tbody>{% for a in producer_history %}<tr><td>{{ a.producer.get_username }}{% if a.current %} <span class="badge ok">Current</span>{% endif %}</td><td>{{ a.from_date|date:"d M Y" }}</td><td>{{ a.to_date|date:"d M Y" }}</td><td>{{ a.note }}</td></tr>{% empty %}<tr><td colspan="4">No broker or agent assigned.</td></tr>{% endfor %}</tbody></table></div>
+{% if can_assign %}<form method="post" action="{% url 'assign_producer' c.pk %}" class="actions" style="padding:12px 16px">{% csrf_token %}<select class="input" name="producer" style="max-width:220px">{% for u in producers %}<option value="{{ u.pk }}">{{ u.get_username }}</option>{% endfor %}</select><input class="input" name="note" placeholder="Reason" style="max-width:240px"><button class="btn ghost">Assign</button></form>{% endif %}</section>
+<div class="grid cols-2">
+<section class="panel flush"><div class="panel__head"><h2>Vehicles ({{ vehicles|length }})</h2></div><div class="tablewrap"><table><thead><tr><th>Vehicle</th><th>Plate</th><th>Chassis</th><th>Fuel</th></tr></thead><tbody>
+{% for v in vehicles %}<tr><td>{{ v.make }} {{ v.model }} {{ v.year }}</td><td>{{ v.plate_code }} {{ v.plate_number }}</td><td><small>{{ v.chassis_no }}</small></td><td>{{ v.get_fuel_type_display }}</td></tr>{% endfor %}</tbody></table></div></section>
+<section class="panel flush"><div class="panel__head"><h2>Open quotes</h2></div>{% if quotes %}<div class="tablewrap"><table><tbody>{% for q in quotes %}<tr><td><a href="{% url 'quote_detail' q.pk %}">{{ q.number }}</a></td><td>{{ q.product.name }}</td><td>{{ q.get_status_display }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><strong>None</strong></div>{% endif %}</section>
+</div>
+{% if claims %}<section class="panel flush"><div class="panel__head"><h2>Claims ({{ claims|length }})</h2></div><div class="tablewrap"><table><thead><tr><th>Claim</th><th>Policy</th><th>Loss date</th><th>Type</th><th>Status</th></tr></thead><tbody>
+{% for cl in claims %}<tr><td><a href="{% url 'claim_detail' cl.pk %}">{{ cl.claim_no }}</a></td><td>{{ cl.policy.policy_no }}</td><td>{{ cl.date_of_loss|date:"d M Y" }}</td><td>{{ cl.get_loss_type_display }}</td><td>{{ cl.get_status_display }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% endblock %}

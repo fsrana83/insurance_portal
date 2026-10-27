@@ -1,0 +1,8 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your policy documents</title>
+{% load static %}<link rel="stylesheet" href="{% static 'css/app.css' %}"></head><body style="background:var(--paper,#f6f8f8)">
+<main class="checkout"><section class="panel">
+<h1 style="font-size:1.3rem">{{ company.name }}</h1>
+{% if expired %}<p>This link has expired. Please ask your insurer to send a new one.</p>
+{% else %}<p>Documents for policy <strong>{{ sh.policy.policy_no }}</strong> ({{ sh.policy.customer.name }}). The link expires on {{ sh.expires_at|date:"d M Y" }}.</p>
+<div style="display:grid;gap:10px;margin-top:14px">{% for k, label in docs %}<a class="btn" href="{% url 'share_download' sh.token k %}">Download {{ label }} (PDF)</a>{% endfor %}</div>{% endif %}
+</section></main></body></html>

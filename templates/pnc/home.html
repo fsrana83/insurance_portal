@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Property & Casualty{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Property &amp; Casualty</h1><p>Fire, marine, engineering, liability and miscellaneous accident business on the shared platform.</p></div>
+<div class="actions">{% if nav.new_quote %}<a class="btn" href="{% url 'pnc_policy_new' %}">New P&amp;C quote</a>{% endif %}<a class="btn ghost" href="{% url 'pnc_policy_list' %}">Policies</a><a class="btn ghost" href="{% url 'pnc_claim_list' %}">Claims</a>{% if nav.reports %}<a class="btn ghost" href="{% url 'pnc_reports' %}">Reports</a>{% endif %}<a class="btn ghost" href="{% url 'pnc_ri' %}">Reinsurance recoveries</a><a class="btn ghost" href="{% url 'pnc_reserve_changes' %}">Reserve changes</a></div></div>
+<div class="grid cols-4" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px">
+<div class="panel"><small>Active policies</small><h2>{{ active }}</h2></div><div class="panel"><small>Quotes</small><h2>{{ quotes }}</h2></div>
+<div class="panel"><small>Awaiting approval</small><h2>{{ pending }}</h2></div><div class="panel"><small>Approved, to issue</small><h2>{{ approved }}</h2></div>
+<div class="panel"><small>Open claims</small><h2>{{ open_claims }}</h2></div><div class="panel"><small>Net premium (active, {{ base_currency }})</small><h2>{{ gwp|floatformat:0 }}</h2></div></div>
+<div class="panel flush"><div class="panel__head"><h2>Premium by class group</h2></div>
+{% if by_group %}<div class="tablewrap"><table><thead><tr><th>Group</th><th class="r">Net premium ({{ base_currency }})</th></tr></thead><tbody>{% for g, v in by_group %}<tr><td>{{ g }}</td><td class="r">{{ v|floatformat:3 }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><strong>No active P&amp;C policies</strong></div>{% endif %}</div>
+<div class="panel flush" style="margin-top:18px"><div class="panel__head"><h2>Recent policies</h2></div>
+{% if recent %}<div class="tablewrap"><table><tbody>{% for p in recent %}<tr><td><a href="{% url 'pnc_policy_detail' p.pk %}">{{ p.number }}</a></td><td>{{ p.customer.name }}</td><td>{{ p.pnc_class.name }}</td><td>{{ p.get_status_display }}</td><td class="r">{{ p.total_payable|money:p.currency }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><strong>Nothing yet</strong></div>{% endif %}</div>
+<div class="panel flush" style="margin-top:18px"><div class="panel__head"><h2>Recent claims</h2></div>
+{% if recent_claims %}<div class="tablewrap"><table><tbody>{% for c in recent_claims %}<tr><td><a href="{% url 'pnc_claim_detail' c.pk %}">{{ c.claim_no }}</a></td><td>{{ c.policy.number }}</td><td>{{ c.get_cause_display }}</td><td>{{ c.get_status_display }}</td><td class="r">{{ c.reserve|money:c.policy.currency }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><strong>No claims</strong></div>{% endif %}</div>
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Catastrophe events{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Catastrophe events</h1><p>Open a claim, go to its Legal / catastrophe tab and mark it with an event. Each event has a unique code.</p></div></div>
+<section class="panel flush">{% if events %}<div class="tablewrap"><table><thead><tr><th>Code</th><th>Event</th><th>Type</th><th>Date</th><th class="r">Claims</th><th class="r">Payable (policy currencies)</th></tr></thead><tbody>
+{% for e in events %}<tr><td><a href="{% url 'cat_detail' e.pk %}">{{ e.code }}</a></td><td>{{ e.name }}</td><td>{{ e.get_event_type_display }}</td><td>{{ e.date_from|date:"d M Y" }}</td><td class="r">{{ e.n }}</td><td class="r">{{ e.gross|default:0 }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No catastrophe events</strong>Mark a claim as catastrophic to create the first one.</div>{% endif %}</section>
+{% endblock %}

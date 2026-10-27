@@ -1,0 +1,21 @@
+{% extends "base.html" %}{% load budget_tags %}
+{% block title %}Outliers{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Outlier identification</h1><p>Robust statistics (median and MAD, Tukey fences) flag figures that stand out from the rest: budget variances, monthly spikes, unusually priced policies, costly claims, early or repeat claims and producers out of line with their peers.</p></div>
+<div class="actions"><a class="btn ghost" href="?{{ request.GET.urlencode }}&format=xlsx">Excel</a></div></div>
+{% include "budgeting/_tabs.html" with tab="outliers" %}
+<form class="filters" method="get" style="flex-wrap:wrap">
+<input class="input" type="number" name="year" value="{{ year }}" aria-label="Year" style="width:90px"><select class="select" name="version" aria-label="Budget">{% for b in budgets %}<option value="{{ b.pk }}" {% if version and b.pk == version.pk %}selected{% endif %}>{{ b.name }}</option>{% endfor %}</select>
+<input class="input" type="date" name="from" value="{{ d_from|date:'Y-m-d' }}" aria-label="From"><input class="input" type="date" name="to" value="{{ d_to|date:'Y-m-d' }}" aria-label="To"><input class="input" type="month" name="through" value="{{ through }}" aria-label="Last closed month">
+<label class="help">z ≥ <input class="input" type="number" step="0.5" name="z" value="{{ prm.z }}" style="width:70px;display:inline-block"></label>
+<label class="help">IQR × <input class="input" type="number" step="0.25" name="iqr" value="{{ prm.iqr }}" style="width:70px;display:inline-block"></label>
+<label class="help">Min var % <input class="input" type="number" step="1" name="min_var" value="{{ prm.min_var }}" style="width:70px;display:inline-block"></label>
+<label class="help">Early ≤ <input class="input" type="number" name="early_days" value="{{ prm.early_days }}" style="width:64px;display:inline-block"> d</label>
+<button class="btn ghost" type="submit">Detect</button></form>
+<div class="chips" style="margin-bottom:12px"><a class="chip" {% if not kind %}aria-current="true"{% endif %} href="?{% for k, v in request.GET.items %}{% if k != 'kind' %}{{ k }}={{ v }}&{% endif %}{% endfor %}">All ({{ total }})</a>
+{% for k, l in kinds %}<a class="chip" {% if kind == k %}aria-current="true"{% endif %} href="?{% for kk, v in request.GET.items %}{% if kk != 'kind' %}{{ kk }}={{ v }}&{% endif %}{% endfor %}kind={{ k }}">{{ l }} ({{ counts|get_count:k }})</a>{% endfor %}</div>
+<p class="help">{{ total }} finding{{ total|pluralize }}, {{ high }} high severity. Lower the z threshold to see more; raise it to see only the extreme cases.</p>
+<div class="panel flush">{% if found %}<div class="tablewrap"><table><thead><tr><th>Severity</th><th>Finding</th><th>Subject</th><th class="r">Value</th><th class="r">Expected</th><th class="r">Score</th><th>Why flagged</th></tr></thead><tbody>
+{% for o in found %}<tr><td><span class="badge {% if o.severity == 'high' %}bad{% else %}warn{% endif %}">{{ o.severity|capfirst }}</span></td><td><a href="{{ o.link }}">{{ o.title }}</a></td><td>{{ o.subject }}</td><td class="r">{{ o.value }}</td><td class="r">{{ o.expected }}</td><td class="r">{{ o.score }}</td><td class="help">{{ o.reason }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No outliers at these thresholds</strong>Try a lower z threshold or a wider date range.</div>{% endif %}</div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Help and guide{% endblock %}
+{% block head %}<style>
+.help-wrap{display:grid;grid-template-columns:230px 1fr;gap:24px;align-items:start}
+.help-toc{position:sticky;top:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;font-size:13.5px;max-height:calc(100vh - 40px);overflow:auto}
+.help-toc h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin:12px 0 4px}.help-toc a{display:block;padding:3px 0;text-decoration:none}
+.help-sec{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px}
+.help-sec h2{font-size:21px;margin-bottom:8px}.help-sec p{margin:8px 0;color:var(--ink-2)}.help-sec ol{margin:8px 0 8px 20px;color:var(--ink-2)}.help-sec li{margin:5px 0}
+.help-sec .tip{background:var(--saffron-tint);border-left:3px solid var(--saffron);padding:8px 12px;border-radius:6px;margin:8px 0;font-size:14px}
+.flow{width:100%;height:auto;margin:12px 0;background:var(--paper);border-radius:8px}
+.help-sec table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}.help-sec th,.help-sec td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}.help-sec th{background:var(--sea);color:#fff}
+@media(max-width:860px){.help-wrap{grid-template-columns:1fr}.help-toc{position:static;max-height:none}}
+</style>{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Help and guide</h1><p>What every part of the portal does, with flow diagrams. Boxes: teal = step, amber = decision or gate, blue = system, green = end, red = stop.</p></div></div>
+<div class="help-wrap">
+<nav class="help-toc" aria-label="Contents">{% for g, items in groups.items %}<h4>{{ g }}</h4>{% for s in items %}<a href="#{{ s.id }}">{{ s.title }}</a>{% endfor %}{% endfor %}</nav>
+<div>{% for s in sections %}<section class="help-sec" id="{{ s.id }}"><h2>{{ s.title }}</h2>
+{% for p in s.intro %}<p>{{ p }}</p>{% endfor %}
+{% if s.svg %}{{ s.svg }}{% endif %}
+{% if s.table %}<div class="tablewrap"><table><thead><tr>{% for h in s.table.head %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>{% for r in s.table.rows %}<tr>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>{% endif %}
+{% if s.steps %}<ol>{% for t in s.steps %}<li>{{ t }}</li>{% endfor %}</ol>{% endif %}
+{% for t in s.tips %}<div class="tip">{{ t }}</div>{% endfor %}</section>{% endfor %}</div>
+</div>
+{% endblock %}

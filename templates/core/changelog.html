@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Change log{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Change log</h1><p>Every change to policies and claims, field by field: who, when, old and new value, and who confirmed it.</p></div>{% if not waiting %}<div class="actions"><a class="btn ghost" href="?{{ query }}&format=csv">CSV</a></div>{% endif %}</div>
+<form class="filters" method="get"><input type="hidden" name="run" value="1">
+<label>From <input class="input" type="date" name="from" value="{{ g.from }}" required></label><label>To <input class="input" type="date" name="to" value="{{ g.to }}" required></label>
+<label>Policy / claim no. <input class="input" name="ref" value="{{ g.ref }}"></label>
+<label>Record <select class="input" name="model"><option value="">All</option>{% for v, l in kinds %}<option value="{{ v }}" {% if g.model == v %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></label>
+<label>User <input class="input" name="user" value="{{ g.user }}"></label><button class="btn" type="submit">Run</button></form>
+{% if waiting %}<div class="panel"><div class="empty"><strong>{% if error %}{{ error }}{% else %}Choose a period and run the log{% endif %}</strong>Nothing is shown until you select the period and press <em>Run</em>.</div></div>
+{% else %}<div class="panel flush">{% if page.object_list %}<div class="tablewrap"><table><thead><tr><th>When</th><th>Reference</th><th>Record</th><th>Field</th><th>Old</th><th>New</th><th>By</th><th>Confirmed by</th></tr></thead><tbody>
+{% for c in page.object_list %}<tr><td>{{ c.timestamp|date:"d M Y H:i" }}</td><td>{{ c.ref }}</td><td>{{ c.object_repr }}<br><small>{{ c.model }} · {{ c.action }}</small></td><td>{{ c.field }}</td><td>{{ c.old_value|truncatechars:60 }}</td><td>{{ c.new_value|truncatechars:60 }}</td><td>{{ c.user.get_username|default:"system" }}</td><td>{{ c.confirmed_by.get_username|default:"" }}</td></tr>{% endfor %}</tbody></table></div>
+<p style="padding:10px">Page {{ page.number }} of {{ page.paginator.num_pages }} · {{ page.paginator.count }} change{{ page.paginator.count|pluralize }}{% if page.has_previous %} · <a href="?{{ query }}&page={{ page.previous_page_number }}">Previous</a>{% endif %}{% if page.has_next %} · <a href="?{{ query }}&page={{ page.next_page_number }}">Next</a>{% endif %}</p>
+{% else %}<div class="empty"><strong>No changes in this period</strong></div>{% endif %}</div>{% endif %}
+{% endblock %}

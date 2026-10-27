@@ -1,0 +1,94 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}{% if proposal %}Edit {{ proposal.number }}{% else %}New quote{% endif %}{% endblock %}
+{% block content %}
+<div class="pagehead">
+  <div><h1>{% if proposal %}Edit {{ proposal.number }}{% else %}New motor quote{% endif %}</h1>
+  <p>Pick the cover, add the vehicles and see the premium update as you type. Amounts are shown in the issuance currency you choose.</p></div>
+</div>
+
+<div class="panel" style="margin-bottom:18px">
+  <div class="panel__head"><h2>Insuring a fleet?</h2><a class="btn ghost small" href="{% url 'fleet_template' %}">Download template</a></div>
+  <form method="post" action="{% url 'fleet_upload' %}" enctype="multipart/form-data" class="dropzone">{% csrf_token %}
+    <div><strong>Upload vehicles from Excel or CSV.</strong><div class="muted">We check duplicates and formats and list every row that needs fixing.</div></div>
+    <div class="actions"><input type="file" name="file" accept=".xlsx,.csv" required aria-label="Fleet file"><button class="btn gold small" type="submit">Load vehicles</button></div>
+  </form>
+  {% if fleet_errors %}<div class="fleet-log" role="alert"><strong>{{ fleet_errors|length }} row{{ fleet_errors|length|pluralize }} could not be loaded</strong>
+    <table><thead><tr><th>Row</th><th>Problem</th></tr></thead><tbody>{% for row, msg in fleet_errors %}<tr><td>{{ row }}</td><td>{{ msg }}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+</div>
+
+<form id="quote-form" method="post" novalidate data-preview="{% url 'quote_preview' %}" data-lookup="{% url 'vehicle_lookup' %}">
+{% csrf_token %}
+{% include "includes/errors.html" %}
+<div class="grid side">
+<div>
+  <section class="panel form-section">
+    <header><h2>Customer</h2></header>
+    <div class="fields">
+      <div class="field w-12" id="cust-picker" data-url="{% url 'customer_search' %}">
+        <label for="cust-q">Customer</label>
+        {{ form.customer }}
+        <div class="picker" id="cust-search">
+          <input class="input" id="cust-q" type="search" autocomplete="off" placeholder="Search by name (full or partial), ID card / CR number or mobile number" aria-label="Search customer">
+          <ul class="picker__list" id="cust-results" role="listbox" hidden></ul>
+        </div>
+        <div class="picker__chosen" id="cust-chosen" hidden><span><strong id="cust-name"></strong> <small id="cust-meta"></small></span><button type="button" class="btn ghost small" id="cust-clear">Change customer</button></div>
+        <p class="help" id="cust-hint">Pick an existing customer to see their policies, or leave empty and fill in the new customer's details below.</p>
+        {% if form.customer.errors %}<p class="errorlist">{{ form.customer.errors.0 }}</p>{% endif %}
+      </div>
+    </div>
+    {% include "includes/flex.html" with fl=form.flex_customer %}
+    <div id="customer-policies" class="cust-policies" hidden data-url="{% url 'customer_policies' %}" aria-live="polite"></div>
+    <div class="fields" id="new-customer" style="margin-top:14px">
+      {% include "includes/field.html" with field=form.new_customer_type w="w-4" %}
+      {% include "includes/field.html" with field=form.new_name w="w-8" %}
+      {% include "includes/field.html" with field=form.new_civil_id w="w-4" flag="data-ct=INDIVIDUAL" %}
+      {% include "includes/field.html" with field=form.new_cr_number w="w-4" flag="data-ct=CORPORATE" %}
+      {% include "includes/field.html" with field=form.new_dob w="w-4" flag="data-ct=INDIVIDUAL" %}
+      {% include "includes/field.html" with field=form.new_cr_registration_date w="w-4" flag="data-ct=CORPORATE" %}
+      {% include "includes/field.html" with field=form.new_cr_expiry_date w="w-4" flag="data-ct=CORPORATE" %}
+      {% include "includes/field.html" with field=form.new_phone w="w-4" %}
+      {% include "includes/field.html" with field=form.new_email w="w-8" %}
+    </div>
+  </section>
+
+  <section class="panel form-section">
+    <header><h2>Cover</h2><p>Third-party liability is compulsory and included in both products.</p></header>
+    <div class="field w-12{% if form.product.errors %} has-error{% endif %}">{{ form.product }}{{ form.product.errors }}</div>
+    <div class="fields" style="margin-top:16px">
+      {% include "includes/field.html" with field=form.producer w="w-4" %}
+      {% include "includes/field.html" with field=form.currency w="w-4" %}
+      {% include "includes/field.html" with field=form.start_date w="w-4" %}
+      {% include "includes/field.html" with field=form.end_date w="w-4" %}
+      {% include "includes/field.html" with field=form.ncd_years w="w-4" flag="data-discount-field" %}
+      {% include "includes/field.html" with field=form.voucher_code w="w-4" flag="data-discount-field" %}
+      {% include "includes/field.html" with field=form.discount_pct w="w-4" flag="data-discount-field" %}
+      {% include "includes/field.html" with field=form.notes w="w-12" %}
+    </div>
+    {% include "includes/flex.html" with fl=form.flex_policy %}
+  </section>
+
+  <section class="form-section">
+    <header><h2>Vehicles</h2><p>Choose the type and usage by tapping the pictures.</p></header>
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}<div class="errorbox" role="alert">{{ formset.non_form_errors }}</div>{% endif %}
+    <div id="vehicles">{% for f in formset %}{% include "motor/_vehicle.html" with f=f i=forloop.counter0 %}{% endfor %}</div>
+    <button type="button" class="btn ghost" id="add-vehicle">Add another vehicle</button>
+    <template id="vehicle-template">{% include "motor/_vehicle.html" with f=formset.empty_form i="__prefix__" %}</template>
+  </section>
+
+  <div class="actions" style="margin-top:8px">
+    <button class="btn" type="submit">Save quote</button>
+    <a class="btn ghost" href="{% if proposal %}{% url 'quote_detail' proposal.pk %}{% else %}{% url 'quote_list' %}{% endif %}">Cancel</a>
+  </div>
+</div>
+
+<aside class="summary" id="summary" aria-live="polite">
+  <h2>Premium</h2>
+  <div data-summary-body><p class="note">Add the vehicle details and the premium appears here.</p></div>
+</aside>
+</div>
+</form>
+<datalist id="make-list"></datalist><datalist id="model-list"></datalist>
+{{ product_meta|json_script:"product-meta" }}
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/vehicles.js' %}"></script><script src="{% static 'js/extras.js' %}"></script>{% endblock %}

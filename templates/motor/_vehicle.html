@@ -1,0 +1,38 @@
+<article class="vehicle{% if f.DELETE.value %} is-deleted{% endif %}" data-index="{{ i }}">
+  <div class="vehicle__bar">
+    <h3 data-vehicle-title>Vehicle</h3>
+    <button type="button" class="btn ghost small" data-remove>Remove</button>
+    <span hidden>{{ f.DELETE }}</span>
+  </div>
+  <div class="vehicle__body">
+    {{ f.vehicle_id }}
+    {% if f.non_field_errors %}<div class="errorbox">{{ f.non_field_errors }}</div>{% endif %}
+    <div><div class="sub">Vehicle type</div>{{ f.vehicle_type }}{{ f.vehicle_type.errors }}</div>
+    <div><div class="sub">How it is used</div>{{ f.usage }}{{ f.usage.errors }}</div>
+    <div class="fields">
+      {% include "includes/field.html" with field=f.make w="w-3 has-add" %}
+      {% include "includes/field.html" with field=f.model w="w-3 has-add" %}
+      {% include "includes/field.html" with field=f.fuel_type w="w-3" %}
+      {% include "includes/field.html" with field=f.year w="w-3" %}
+      {% include "includes/field.html" with field=f.color w="w-3" %}
+      {% include "includes/field.html" with field=f.plate_code w="w-3" %}
+      {% include "includes/field.html" with field=f.plate_number w="w-3" %}
+      {% include "includes/field.html" with field=f.chassis_no w="w-4" %}
+      {% include "includes/field.html" with field=f.engine_no w="w-4" %}
+      {% include "includes/field.html" with field=f.cc w="w-3" %}
+      {% include "includes/field.html" with field=f.seats w="w-3" %}
+      {% include "includes/field.html" with field=f.sum_insured w="w-4" flag="data-si-field" %}
+    </div>
+    {% if f.si_note.value %}<p class="help si-note">{{ f.si_note.value }}</p>{% endif %}{{ f.si_note }}
+    {% include "includes/flex.html" with fl=f.flex_vehicle %}
+    <div class="drivers" data-drivers><div class="sub">Additional drivers <button type="button" class="btn ghost small" data-add-driver>Add driver</button></div>
+      <div data-driver-rows></div>{{ f.drivers_json }}{{ f.drivers_json.errors }}</div>
+    <div><div class="sub">Riders and extensions</div>{{ f.riders }}{{ f.riders.errors }}</div>
+    {% if f.waived %}
+    <div class="fields">
+      {% include "includes/field.html" with field=f.waived w="w-8" group=1 %}
+      {% include "includes/field.html" with field=f.waiver_reason w="w-4" %}
+    </div>
+    {% endif %}
+  </div>
+</article>

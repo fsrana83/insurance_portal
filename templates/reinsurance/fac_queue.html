@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Facultative placements{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Facultative placements</h1><p>These risks are above automatic treaty capacity. The policy stays unbound until you confirm a reinsurer.</p></div></div>
+<div class="panel flush">{% if pending %}<div class="tablewrap"><table><thead><tr><th>Policy</th><th>Vehicle</th><th class="r">Sum insured to place</th><th class="r">Premium</th><th>Place with</th></tr></thead><tbody>
+{% for c in pending %}<tr><td><a href="{% url 'policy_detail' c.policy.pk %}">{{ c.policy.policy_no }}</a><br><small>{{ c.policy.customer.name }}</small></td><td>{{ c.risk.make }} {{ c.risk.model }}</td><td class="r">{{ c.sum_insured_ceded|money:"OMR" }}</td><td class="r">{{ c.premium_ceded|money:"OMR" }}</td>
+<td>{% if role == 'UNDERWRITER' or role == 'ADMIN' %}<form method="post" action="{% url 'fac_confirm' c.pk %}" class="actions">{% csrf_token %}{{ form.reinsurer }}<button class="btn small" type="submit">Confirm</button></form>{% else %}<span class="muted">Underwriter only</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No placements waiting</strong>Every risk fits inside the automatic treaties.</div>{% endif %}</div>
+{% if done %}<section class="panel flush" style="margin-top:18px"><div class="panel__head"><h2>Recently placed</h2></div><div class="tablewrap"><table><tbody>{% for c in done %}<tr><td>{{ c.policy.policy_no }}</td><td>{{ c.fac_reinsurer.name }}</td><td class="r">{{ c.sum_insured_ceded|money:"OMR" }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% endblock %}

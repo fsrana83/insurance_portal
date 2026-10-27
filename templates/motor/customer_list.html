@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Customers</h1></div></div>
+<form class="filters" method="get"><input class="input" name="q" value="{{ q }}" placeholder="Name, civil ID, CR or phone" aria-label="Search"><button class="btn ghost" type="submit">Search</button></form>
+<div class="panel flush">{% if customers %}<div class="tablewrap"><table><thead><tr><th>Name</th><th>Type</th><th>ID / CR</th><th>Mobile</th><th>Email</th><th>Policies</th></tr></thead><tbody>
+{% for c in customers %}<tr><td><a href="{% url 'customer_detail' c.pk %}">{{ c.name }}</a></td><td>{{ c.get_customer_type_display }}</td><td>{{ c.identifier|default:"—" }}</td><td>{{ c.phone|default:"—" }}</td><td>{{ c.email|default:"—" }}</td><td>{{ c.n_policies }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No customers found</strong>Customers are created when you save a quote.</div>{% endif %}</div>
+{% endblock %}

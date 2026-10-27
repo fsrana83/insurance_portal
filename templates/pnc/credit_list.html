@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}P&C credit control{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>P&amp;C credit control</h1><p>Instalment requests for P&amp;C policies. A second person must decide.</p></div></div>
+<section class="panel flush"><div class="panel__head"><h2>Awaiting decision</h2></div>
+{% if pending %}<div class="tablewrap"><table><thead><tr><th>Quote</th><th>Customer</th><th class="r">Premium</th><th class="r">Instalments</th><th class="r">Advance</th><th>Requested by</th><th>Decision</th></tr></thead><tbody>
+{% for c in pending %}<tr><td><a href="{% url 'pnc_policy_detail' c.policy.pk %}">{{ c.policy.number }}</a></td><td>{{ c.policy.customer.name }}</td><td class="r">{{ c.policy.total_payable|money:c.policy.currency }}</td><td class="r">{{ c.installments }}</td><td class="r">{{ c.advance_amount|money:c.policy.currency }}</td><td>{{ c.requested_by.get_username }}</td>
+<td><form method="post" class="actions">{% csrf_token %}<input class="input" name="note" placeholder="Note (required to reject)" style="max-width:200px"><button class="btn small" formaction="{% url 'pnc_credit_decide' c.pk 'approve' %}">Approve</button><button class="btn danger small" formaction="{% url 'pnc_credit_decide' c.pk 'reject' %}">Reject</button></form></td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>Nothing waiting</strong></div>{% endif %}</section>
+<section class="panel flush" style="margin-top:18px"><div class="panel__head"><h2>Decided</h2></div>
+{% if decided %}<div class="tablewrap"><table><tbody>{% for c in decided %}<tr><td><a href="{% url 'pnc_policy_detail' c.policy.pk %}">{{ c.policy.number }}</a></td><td>{{ c.policy.customer.name }}</td><td>{{ c.get_status_display }}</td><td class="r">{{ c.installments }}</td><td>{{ c.decided_by.get_username }}</td><td>{{ c.decision_note }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><strong>No decisions yet</strong></div>{% endif %}</section>
+{% endblock %}

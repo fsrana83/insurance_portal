@@ -1,0 +1,1 @@
+{% load icons %}<label class="icon-card" for="{{ widget.attrs.id }}"><input type="{{ widget.type }}" name="{{ widget.name }}" value="{{ widget.value|stringformat:'s' }}"{% include "django/forms/widgets/attrs.html" %}><span class="icon-card__face">{% icon widget.value|stringformat:'s' %}<span class="icon-card__label">{{ widget.label }}</span></span></label>

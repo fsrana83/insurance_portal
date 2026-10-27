@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Letter of guarantee{% endblock %}
+{% block content %}<div class="noprint actions" style="margin-bottom:12px"><button class="btn" onclick="window.print()">Print</button></div>
+<div class="letter"><p>{{ g.issued_on|date:"d F Y" }}</p><p><strong>{{ g.hospital.name }}</strong><br>Admissions and billing</p>
+<h1>Letter of guarantee: claim {{ c.claim_no }}</h1>
+<p>We guarantee payment for the medical treatment of <strong>{{ g.patient_name }}</strong>, injured in an accident involving our insured vehicle ({{ c.risk.plate }}, policy {{ c.policy.policy_no }}), up to <strong>{{ g.guaranteed_amount|money_text:cur }}</strong>.</p>
+<p>Charges are payable at the agreed tariff. Items above the tariff, such as a private room where a semi-private room is covered, will not be paid. Send invoices with this letter's reference.</p><p>Claims Department</p></div>{% endblock %}

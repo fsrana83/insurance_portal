@@ -1,0 +1,92 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Good {% now "H" as h %}{% if h < "12" %}morning{% elif h < "18" %}afternoon{% else %}evening{% endif %}, {{ user.first_name|default:user.username }}</h1>
+<p>{{ role_label }} · figures in {{ base.code }} unless shown otherwise</p></div>
+<div class="actions">{% if nav.new_quote %}<a class="btn gold" href="{% url 'quote_create' %}">New quote</a>{% endif %}{% if role != 'CUSTOMER' %}<a class="btn ghost" href="{% url 'claim_new' %}">Register claim</a>{% endif %}</div></div>
+
+<div class="stack">
+{% if producer %}
+<div class="figs">
+  <div class="fig"><div class="label">Premium written this month</div><div class="value">{{ producer.mtd|money:base }}</div><div class="sub">{{ producer.mtd_count }} polic{{ producer.mtd_count|pluralize:"y,ies" }}</div></div>
+  <div class="fig"><div class="label">Premium written this year</div><div class="value">{{ producer.ytd|money:base }}</div><div class="sub">{{ producer.ytd_count }} polic{{ producer.ytd_count|pluralize:"y,ies" }}</div></div>
+  <div class="fig"><div class="label">Commission this month</div><div class="value">{{ producer.commission_mtd|money:base }}</div><div class="sub">after clawbacks</div></div>
+  <div class="fig"><div class="label">Commission this year</div><div class="value">{{ producer.commission_ytd|money:base }}</div></div>
+</div>
+{% endif %}
+
+{% if approval_count %}<div class="msg warning">{{ approval_count }} proposal{{ approval_count|pluralize }} waiting for approval. <a href="{% url 'approval_queue' %}">Open the queue</a></div>{% endif %}
+{% if fac_pending %}<div class="msg warning">{{ fac_pending }} polic{{ fac_pending|pluralize:"y is,ies are" }} held for facultative placement. <a href="{% url 'fac_queue' %}">Place them</a></div>{% endif %}
+
+<div class="grid cols-2">
+{% if producer %}
+<section class="panel flush"><div class="panel__head"><h2>Open quotes and proposals</h2><a href="{% url 'quote_list' %}">View all</a></div>
+{% if producer.pending_quotes %}<div class="tablewrap"><table><thead><tr><th>Number</th><th>Customer</th><th>Status</th><th class="r">Total</th></tr></thead><tbody>
+{% for q in producer.pending_quotes %}<tr><td><a href="{% url 'quote_detail' q.pk %}">{{ q.number }}</a></td><td>{{ q.customer.name }}</td><td>{% include "includes/status.html" with status=q.status label=q.get_status_display %}</td><td class="r">{{ q.total_payable|money:q.currency }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No open quotes</strong>Start a new quote to see it here.</div>{% endif %}</section>
+{% endif %}
+
+{% if expiring is not None %}
+<section class="panel flush"><div class="panel__head"><h2>Expiring in 45 days</h2><a href="{% url 'policy_list' %}?expiring=1">View all</a></div>
+{% if expiring %}<div class="tablewrap"><table><thead><tr><th>Policy</th><th>Customer</th><th>Expires</th><th></th></tr></thead><tbody>
+{% for p in expiring %}<tr><td><a href="{% url 'policy_detail' p.pk %}">{{ p.policy_no }}</a></td><td>{{ p.customer.name }}</td><td>{{ p.end_date|date:"d M Y" }} <small>({{ p.days_to_expiry }}d)</small></td>
+<td class="r">{% if role != 'CUSTOMER' and role != 'UNDERWRITER' %}<form method="post" action="{% url 'renew' p.pk %}" style="display:inline">{% csrf_token %}<button class="btn small" type="submit">Renew</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>Nothing expiring soon</strong>Policies that expire within 45 days appear here with a Renew button.</div>{% endif %}</section>
+{% endif %}
+</div>
+
+{% if team %}
+<div class="grid cols-2">
+<section class="panel flush"><div class="panel__head"><h2>Team production this year</h2></div>
+<div class="tablewrap"><table><thead><tr><th>Producer</th><th class="r">Policies</th><th class="r">Premium</th></tr></thead><tbody>
+{% for r in team %}<tr><td>{{ r.user.get_username }}</td><td class="r">{{ r.count }}</td><td class="r">{{ r.gwp|money:base }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% if nb_vs_renewal %}<section class="panel"><div class="panel__head"><h2>New business and renewals</h2></div>
+<div class="split-bar" role="img" aria-label="New business {{ nb_vs_renewal.new_pct|floatformat:0 }} percent"><span style="width:{{ nb_vs_renewal.new_pct|floatformat:0 }}%;background:var(--sea)"></span><span style="flex:1;background:var(--saffron)"></span></div>
+<dl class="dl" style="margin-top:14px"><dt>New business</dt><dd>{{ nb_vs_renewal.new|money:base }} · {{ nb_vs_renewal.new_count }} polic{{ nb_vs_renewal.new_count|pluralize:"y,ies" }}</dd><dt>Renewals</dt><dd>{{ nb_vs_renewal.renewal|money:base }} · {{ nb_vs_renewal.renewal_count }} polic{{ nb_vs_renewal.renewal_count|pluralize:"y,ies" }}</dd></dl></section>{% endif %}
+</div>
+{% endif %}
+
+{% if capacity or top_risks %}
+<div class="grid cols-2">
+{% if capacity %}<section class="panel"><div class="panel__head"><h2>Treaty capacity used</h2></div>
+{% for c in capacity %}<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between"><strong>{{ c.treaty.name }}</strong><span>{{ c.pct|floatformat:0 }}%</span></div>
+<div class="bar {% if c.pct > 90 %}crit{% elif c.pct > 70 %}hot{% endif %}"><span style="width:{{ c.pct|floatformat:0 }}%"></span></div><small>{{ c.used|money:base }} of {{ c.cap|money:base }}</small></div>{% empty %}<div class="empty">No surplus treaty is active.</div>{% endfor %}</section>{% endif %}
+{% if top_risks %}<section class="panel flush"><div class="panel__head"><h2>Largest risks</h2><span class="muted">Total exposure {{ exposure_total|money:base }}</span></div>
+<div class="tablewrap"><table><thead><tr><th>Policy</th><th>Customer</th><th class="r">Sum insured</th></tr></thead><tbody>
+{% for p, si in top_risks %}<tr><td><a href="{% url 'policy_detail' p.pk %}">{{ p.policy_no }}</a></td><td>{{ p.customer.name }}</td><td class="r">{{ si|money:base }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+</div>
+{% endif %}
+
+{% if expense_ratio %}<section class="panel"><div class="panel__head"><h2>Expense ratio</h2><span class="muted">Loaded in premium vs acquisition cost (commission) this year</span></div>
+<div class="figs" style="box-shadow:none"><div class="fig"><div class="label">Expense loaded</div><div class="value">{{ expense_ratio.loaded|money:base }}</div></div><div class="fig"><div class="label">Actual acquisition cost</div><div class="value">{{ expense_ratio.actual|money:base }}</div></div><div class="fig"><div class="label">Left to cover overheads</div><div class="value">{{ expense_ratio.variance|money:base }}</div><div class="sub">{{ expense_ratio.util_pct|floatformat:0 }}% of load used</div></div></div></section>{% endif %}
+
+{% if claims_status %}
+<div class="figs">
+{% for s, n in claims_status.items %}{% if s != 'REJECTED' %}<div class="fig"><div class="label">{{ s|title }}</div><div class="value">{{ n }}</div></div>{% endif %}{% endfor %}
+{% if subrogation %}<div class="fig"><div class="label">Subrogation recovered</div><div class="value">{{ subrogation.ratio|floatformat:0 }}%</div><div class="sub">{{ subrogation.recovered|money:base }} of {{ subrogation.paid|money:base }} · {{ subrogation.open }} open</div></div>{% endif %}
+</div>
+<div class="grid cols-2">
+<section class="panel"><div class="panel__head"><h2>Garage ratings</h2><a href="{% url 'provider_list' %}">All providers</a></div>
+{% if top_garages %}<h3 style="margin-bottom:6px">Best</h3>{% for g in top_garages %}<div style="display:flex;justify-content:space-between;padding:4px 0"><span>{{ g.name }}{% if g.preferred %} <span class="badge info">Preferred</span>{% endif %}</span><strong>{{ g.average_score }} / 5</strong></div>{% endfor %}
+<h3 style="margin:14px 0 6px">Needs attention</h3>{% for g in bottom_garages %}<div style="display:flex;justify-content:space-between;padding:4px 0"><span>{{ g.name }}</span><strong>{{ g.average_score }} / 5</strong></div>{% endfor %}
+{% else %}<div class="empty"><strong>No ratings yet</strong>Ratings are created when a repair is completed.</div>{% endif %}</section>
+<section class="panel flush"><div class="panel__head"><h2>Surveyor assignments in progress</h2>{% if repair_delays %}<span class="badge bad">{{ repair_delays }} late repair{{ repair_delays|pluralize }}</span>{% endif %}</div>
+{% if open_surveys %}<div class="tablewrap"><table><thead><tr><th>Claim</th><th>Surveyor</th><th class="r">Days</th></tr></thead><tbody>
+{% for c, d, late in open_surveys %}<tr><td><a href="{% url 'claim_detail' c.pk %}">{{ c.claim_no }}</a></td><td>{{ c.surveyor.name }}</td><td class="r">{{ d }} {% if late %}<span class="badge bad">Past SLA</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No open surveys</strong>Every assigned surveyor has reported.</div>{% endif %}</section>
+</div>
+{% endif %}
+
+{% if mdp %}<section class="panel flush"><div class="panel__head"><h2>Minimum and deposit premium</h2></div>
+<div class="tablewrap"><table><thead><tr><th>Treaty</th><th class="r">Estimated GNRPI</th><th class="r">Actual GNRPI</th><th class="r">Deposit premium</th><th class="r">Additional due</th></tr></thead><tbody>
+{% for m in mdp %}<tr><td><a href="{% url 'treaty_detail' m.treaty.pk %}">{{ m.treaty.name }}</a></td><td class="r">{{ m.estimated|money:base }}</td><td class="r">{{ m.actual|money:base }} <small>({{ m.pct|floatformat:0 }}%)</small></td><td class="r">{{ m.mdp|money:base }}</td><td class="r">{{ m.additional|money:base }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% if commission_split %}<div class="figs"><div class="fig"><div class="label">Commission payable</div><div class="value">{{ commission_split.payable|money:base }}</div></div><div class="fig"><div class="label">Clawbacks</div><div class="value">{{ commission_split.clawback|money:base }}</div></div><div class="fig"><div class="label">Net commission</div><div class="value">{{ commission_split.net|money:base }}</div></div></div>{% endif %}
+
+{% if my_policies is not None %}
+<section class="panel flush"><div class="panel__head"><h2>My policies</h2></div>
+{% if my_policies %}<div class="tablewrap"><table><thead><tr><th>Policy</th><th>Period</th><th>Status</th><th class="r">Total</th><th></th></tr></thead><tbody>
+{% for p in my_policies %}<tr><td><a href="{% url 'policy_detail' p.pk %}">{{ p.policy_no }}</a></td><td>{{ p.start_date|date:"d M Y" }} – {{ p.end_date|date:"d M Y" }}</td><td>{% include "includes/status.html" with status=p.status label=p.get_status_display %}</td><td class="r">{{ p.total_payable|money:p.currency }}</td><td class="r"><a class="btn ghost small" href="{% url 'policy_pdf' p.pk %}">Certificate</a> <a class="btn small" href="{% url 'claim_new' %}?policy={{ p.pk }}">Report a claim</a></td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No policies yet</strong>Policies issued to you appear here.</div>{% endif %}</section>
+{% endif %}
+</div>
+{% endblock %}

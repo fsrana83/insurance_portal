@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Trial balance{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Trial balance</h1><p>Opening balance, movement and closing balance by account ({{ base_currency }}).</p></div></div>
+{% include "accounting/_tabs.html" %}
+<form class="filters" method="get"><input class="input" type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" aria-label="From"><input class="input" type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" aria-label="To"><button class="btn ghost" type="submit">Apply</button></form>
+<div class="panel flush"><div class="tablewrap"><table><thead><tr><th>Account</th><th>IFRS 17 line</th><th class="r">Opening (Dr+/Cr−)</th><th class="r">Debit</th><th class="r">Credit</th><th class="r">Closing (Dr+/Cr−)</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.a.code }} {{ r.a.name }}</td><td>{{ r.a.ifrs17_line|default:"—" }}</td><td class="r">{{ r.opening|money:base_currency }}</td><td class="r">{{ r.debit|money:base_currency }}</td><td class="r">{{ r.credit|money:base_currency }}</td><td class="r">{{ r.closing|money:base_currency }}</td></tr>{% empty %}<tr><td colspan="6"><div class="empty"><strong>No postings yet</strong></div></td></tr>{% endfor %}
+<tr><td colspan="3"><strong>Period totals</strong></td><td class="r"><strong>{{ td|money:base_currency }}</strong></td><td class="r"><strong>{{ tc|money:base_currency }}</strong></td><td></td></tr></tbody></table></div></div>
+{% endblock %}

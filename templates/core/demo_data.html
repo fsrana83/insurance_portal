@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Demo data{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Demo data</h1><p>Load a realistic book of business to explore the system, or remove it again. Only records flagged as demo are touched; your own data and the reference data (products, tariffs, treaties) stay.</p></div></div>
+{% if run and run.status == 'RUNNING' %}<section class="panel" id="demo-progress" data-url="{% url 'demo_status' run.pk %}" data-running="1"><h2>{% if run.action == 'LOAD' %}Loading{% else %}Removing{% endif %} demo data…</h2>
+<div class="progressbar" role="progressbar"><span style="width:5%"></span></div><p class="help" data-txt>Starting…</p><p class="help">You can leave this page; the job continues on the server.</p></section>
+{% elif run %}<div class="msg {% if run.status == 'DONE' %}success{% else %}error{% endif %}">{{ run.message }}</div>{% endif %}
+<div class="grid cols-2">
+<section class="panel"><h2>Current demo data</h2><dl class="dl" style="grid-template-columns:1fr auto">{% for k, v in counts.items %}<dt>{{ k|capfirst }}</dt><dd>{{ v }}</dd>{% endfor %}</dl></section>
+<section class="panel">{% if loaded %}<h2>Remove demo data</h2><p>Deletes every demo customer, vehicle, policy, claim, voucher, receipt and journal.</p>
+<form method="post" data-confirm="Remove all demo data? This cannot be undone.">{% csrf_token %}<input type="hidden" name="action" value="unload"><label class="check"><input type="checkbox" name="remove_users"> Also delete the demo login accounts (pm1, agent1…)</label>
+<button class="btn danger" type="submit" style="margin-top:12px" {% if run and run.status == 'RUNNING' %}disabled{% endif %}>Unload demo data</button></form>
+{% else %}<h2>Load demo data</h2><p>Creates policies (new business, renewals, endorsements, cancellations), receipts, vouchers, drivers, claims of every type with damage maps, and the IFRS 17 postings. 1,000 policies take a few minutes.</p>
+<form method="post">{% csrf_token %}<input type="hidden" name="action" value="load"><div class="fields">
+<div class="field w-4"><label for="ny">History (years)</label><input class="input" id="ny" type="number" name="years" value="5" min="1" max="10"></div>
+<div class="field w-4"><label for="np">Policies</label><input class="input" id="np" type="number" name="policies" value="1000" min="10" max="5000"></div>
+<div class="field w-4"><label for="nc">Claims</label><input class="input" id="nc" type="number" name="claims" value="300" min="0" max="2000"></div></div>
+<button class="btn gold" type="submit" style="margin-top:12px" {% if run and run.status == 'RUNNING' %}disabled{% endif %}>Load demo data</button></form>{% endif %}</section></div>
+<p class="help">Command line: <code>python manage.py load_demo_data --policies 1000 --claims 300 --years 5</code> · <code>python manage.py unload_demo_data</code></p>
+{% endblock %}
+{% block scripts %}{% load static %}<script src="{% static 'js/extras.js' %}"></script>{% endblock %}

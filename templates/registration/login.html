@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Sign in{% endblock %}
+{% block anon %}
+<div class="login">
+  <section class="login__art">
+    <div><strong style="font:700 1.15rem var(--font-head)">Advance Motor Insurance Solution</strong></div>
+    <div>
+      <h1>Motor policies, issued right the first time.</h1>
+      <p>Quote, approve and issue in OMR, USD, AED or SAR. Built around the unified motor policy of the Financial Services Authority.</p>
+    </div>
+    <div class="login__road" aria-hidden="true"><svg viewBox="50 8 170 52" overflow="visible" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M-600 57h1400" stroke-dasharray="2 12" opacity=".5"/><g class="login__car"><path d="M60 46v-8q0-4 6-5l26-3 20-13h40l18 13 26 3q10 2 10 8v5h-24a12 12 0 0 0-24 0h-42a12 12 0 0 0-24 0z"/><path d="M118 20l-9 10h26V20zM142 20v10h24l-14-10z" opacity=".75"/><circle cx="104" cy="46" r="9"/><circle cx="104" cy="46" r="3"/><circle cx="170" cy="46" r="9"/><circle cx="170" cy="46" r="3"/></g></svg></div>
+  </section>
+  <section class="login__form">
+    <form method="post">{% csrf_token %}
+      <h2 style="font-size:1.5rem;margin-bottom:18px">Sign in</h2>
+      {% if form.errors %}<div class="errorbox" role="alert">Wrong username or password. Check both and try again.</div>{% endif %}
+      <div class="field"><label for="id_username">Username or email</label><input class="input" id="id_username" name="username" autocomplete="username" autofocus required></div>
+      <div class="field"><label for="id_password">Password</label><input class="input" type="password" id="id_password" name="password" autocomplete="current-password" required></div>
+      <input type="hidden" name="next" value="{{ next }}">
+      <button class="btn" style="width:100%" type="submit">Sign in</button>
+      <p style="margin-top:14px"><a href="{% url 'password_reset' %}">Reset your password</a></p>
+    </form>
+  </section>
+</div>
+{% endblock %}

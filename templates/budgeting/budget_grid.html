@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load money budget_tags %}
+{% block title %}{{ v.name }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ v.name }}</h1><p>{{ v.get_kind_display }} {{ v.year }} · <span class="badge {% if v.status == 'DRAFT' %}warn{% elif v.status == 'APPROVED' %}ok{% else %}info{% endif %}">{{ v.get_status_display }}</span> · {{ v.method|default:"manual" }}{% if v.parent %} · from <a href="{% url 'budget_edit' v.parent_id %}">{{ v.parent.name }}</a>{% endif %}{% if v.cutoff %} · actuals to {{ v.cutoff|date:"M Y" }}{% endif %}</p></div>
+<div class="actions"><a class="btn ghost" href="{% url 'budget_analytics' %}?year={{ v.year }}&version={{ v.pk }}">Budget vs actual</a>
+{% if can_manage %}{% if v.status == 'DRAFT' %}<form method="post" action="{% url 'budget_action' v.pk 'approve' %}">{% csrf_token %}<button class="btn gold" type="submit">Approve</button></form>
+{% elif v.status == 'APPROVED' %}<form method="post" action="{% url 'budget_action' v.pk 'lock' %}" data-confirm="Lock this version? Figures can no longer be changed.">{% csrf_token %}<button class="btn" type="submit">Lock</button></form>{% endif %}
+{% if v.status != 'DRAFT' and role == 'ADMIN' %}<form method="post" action="{% url 'budget_action' v.pk 'reopen' %}" data-confirm="Re-open as a draft?">{% csrf_token %}<button class="btn ghost" type="submit">Re-open</button></form>{% endif %}
+{% if v.status == 'DRAFT' %}<form method="post" action="{% url 'budget_action' v.pk 'delete' %}" data-confirm="Delete this draft?">{% csrf_token %}<button class="btn danger" type="submit">Delete</button></form>{% endif %}{% endif %}</div></div>
+{% include "budgeting/_tabs.html" with tab="list" %}
+<form method="post" id="grid-form" novalidate>{% csrf_token %}
+{% if can_edit %}<div class="panel" style="margin-bottom:14px"><div class="fields"><div class="field w-4"><label>Name</label><input class="input" name="name" value="{{ v.name }}"></div><div class="field w-8"><label>Note</label><input class="input" name="note" value="{{ v.note }}"></div></div>
+<div class="actions" style="margin-top:10px"><label class="help">Scale every figure by <input class="input" id="scale" type="number" step="0.1" value="0" style="width:90px;display:inline-block"> %</label><button type="button" class="btn ghost small" id="apply-scale">Apply</button><span class="help">Amounts are in {{ base_currency }}; POLICIES is a count.</span></div></div>{% endif %}
+{% for b in blocks %}<section class="panel flush" style="margin-bottom:14px"><div class="panel__head"><h2>{{ b.product.name }}</h2></div><div class="tablewrap"><table class="grid-table"><thead><tr><th>Metric</th>{% for m in months %}<th class="r">{{ m }}</th>{% endfor %}<th class="r">Year</th></tr></thead><tbody>
+{% for r in b.rows %}<tr data-row><td>{{ r.label }}</td>{% for m, amt in r.cells %}<td class="r">{% if can_edit %}<input class="input num" name="v_{{ b.product.pk }}_{{ r.metric }}_{{ m }}" value="{{ amt|floatformat:'0' }}" inputmode="decimal" aria-label="{{ r.label }} {{ m }}">{% else %}{{ amt|floatformat:"0g" }}{% endif %}</td>{% endfor %}<td class="r"><strong data-total>{{ r.total|floatformat:"0g" }}</strong></td></tr>{% endfor %}</tbody></table></div></section>{% endfor %}
+{% if can_edit %}<div class="actions"><button class="btn" type="submit">Save figures</button></div>{% endif %}</form>
+{% if can_manage and v.kind == 'BUDGET' %}<div class="grid cols-2" style="margin-top:18px">
+<section class="panel"><h2>Roll over to another year</h2><p class="help">Creates a draft for the next year from this version's figures, or from this year's actuals (months without actuals keep the budget figure).</p>
+<form method="post" action="{% url 'budget_action' v.pk 'rollover' %}">{% csrf_token %}<div class="fields"><div class="field w-4"><label>New year</label><input class="input" type="number" name="year" value="{{ next_year }}"></div>
+<div class="field w-4"><label>Uplift %</label><input class="input" type="number" step="0.1" name="pct" value="5"></div>
+<div class="field w-4"><label>Based on</label><select class="select" name="basis"><option value="ACTUALS">This year's actuals</option><option value="VERSION">This version's figures</option></select></div></div>
+<label class="check" style="margin-top:10px"><input type="checkbox" name="normalise" checked> Cap one-off spikes in the actuals</label><button class="btn gold small" type="submit" style="margin-top:10px">Roll over</button></form></section>
+<section class="panel"><h2>Create a forecast from this budget</h2><p class="help">Actual figures up to the cut-off month, projection for the months after it. Saved as a separate forecast version.</p>
+<form method="post" action="{% url 'budget_action' v.pk 'forecast' %}">{% csrf_token %}<div class="fields"><div class="field w-6"><label>Method</label><select class="select" name="method">{% for k, l in methods %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+<div class="field w-6"><label>Last closed month</label><input class="input" type="month" name="through" value="{{ today|date:'Y' }}-{{ today|date:'m' }}"></div></div>
+<button class="btn gold small" type="submit" style="margin-top:10px">Create forecast</button></form></section></div>{% endif %}
+{% if children %}<section class="panel flush" style="margin-top:18px"><div class="panel__head"><h2>Derived versions</h2></div><div class="tablewrap"><table><tbody>{% for c in children %}<tr><td><a href="{% url 'budget_edit' c.pk %}">{{ c.name }}</a></td><td>{{ c.get_kind_display }} {{ c.year }}</td><td>{{ c.get_status_display }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% endblock %}
+{% block scripts %}<script>
+(function(){var f=document.getElementById("grid-form");if(!f)return;
+function tot(row){var t=0;row.querySelectorAll("input").forEach(function(i){t+=parseFloat((i.value||"0").replace(/,/g,""))||0;});var c=row.querySelector("[data-total]");if(c)c.textContent=Math.round(t).toLocaleString();}
+f.addEventListener("input",function(e){var r=e.target.closest("[data-row]");if(r)tot(r);});
+var b=document.getElementById("apply-scale");if(b)b.addEventListener("click",function(){var p=parseFloat(document.getElementById("scale").value)||0;
+f.querySelectorAll("tr[data-row]").forEach(function(r){r.querySelectorAll("input").forEach(function(i){var v=parseFloat((i.value||"0").replace(/,/g,""))||0;i.value=Math.round(v*(1+p/100));});tot(r);});});})();
+</script>{% endblock %}

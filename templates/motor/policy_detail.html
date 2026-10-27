@@ -1,0 +1,62 @@
+{% extends "base.html" %}{% load money icons %}
+{% block title %}{{ p.policy_no }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ p.policy_no }}</h1><p>{{ p.product.name }} for {{ p.customer.name }} · version {{ p.version }} · {% include "includes/status.html" with status=p.status label=p.get_status_display %}</p></div>
+<div class="actions"><a class="btn ghost" href="{% url 'policy_pdf' p.pk %}" target="_blank" rel="noopener">Schedule (PDF)</a>
+{% if is_staff %}<a class="btn ghost" href="{% url 'policy_share' p.pk %}">Send documents</a>{% endif %}
+{% if p.status == 'ACTIVE' %}{% if can_endorse %}<a class="btn ghost" href="{% url 'endorse' p.pk %}">{% if is_staff %}Endorse{% else %}Request a change{% endif %}</a>{% endif %}
+<a class="btn gold" href="{% url 'claim_new' %}?policy={{ p.pk }}">Register claim</a>{% endif %}
+{% if p.status == 'ACTIVE' or p.status == 'EXPIRED' %}{% if role == 'AGENT' or role == 'BROKER' or role == 'PRODUCTION_MANAGER' or role == 'ADMIN' or role == 'UNDERWRITER' %}<form method="post" action="{% url 'renew' p.pk %}">{% csrf_token %}<button class="btn" type="submit">Renew</button></form>{% endif %}{% endif %}</div></div>
+{% if p.status == 'PENDING_FAC' %}<div class="msg warning"><strong>Held for facultative placement.</strong> The risk exceeds automatic treaty capacity. An underwriter must confirm a reinsurer before the policy is bound.</div>{% endif %}
+{% if p.status == 'CANCELLED' %}<div class="msg error">Cancelled on {{ p.cancelled_on|date:"d M Y" }}.</div>{% endif %}
+
+<div class="grid side">
+<div class="stack">
+<section class="panel"><h2>Insured vehicles</h2>
+{% for r in risks %}<div style="display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:center;padding:12px 0;border-top:1px solid var(--line-2)">
+<div style="color:var(--sea)">{% icon r.vehicle_type %}</div>
+<div><strong>{{ r.make }} {{ r.model }} {{ r.year }}</strong> <span class="muted">{{ r.plate }}</span><br><small>{{ r.get_vehicle_type_display }} · {{ r.get_usage_display }} · {{ r.color }} · {{ r.cc }}cc · chassis {{ r.chassis_no }} · engine {{ r.engine_no }}</small><br>
+{% if p.product.includes_od %}Sum insured {{ r.sum_insured|money:p.currency }}{% else %}Third-party liability only{% endif %}{% for c in r.riders.all %} <span class="badge info">{{ c.name }}</span>{% endfor %}</div></div>{% endfor %}</section>
+
+{% if drivers %}<section class="panel flush"><div class="panel__head"><h2>Additional drivers</h2></div><div class="tablewrap"><table><thead><tr><th>Name</th><th>Licence</th><th>Age</th><th>Relationship</th><th>Added</th></tr></thead><tbody>
+{% for d in drivers %}<tr><td>{{ d.name }}</td><td>{{ d.licence_no }}</td><td>{{ d.age }}{% if d.age < 25 %} <span class="badge warn">Young driver</span>{% endif %}</td><td>{{ d.get_relationship_display }}</td><td>{{ d.added_on|date:"d M Y" }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+
+{% if schedule %}<section class="panel flush"><div class="panel__head"><h2>Instalment schedule</h2><span>Credit basis{% if p.credit %} · approved by {{ p.credit.decided_by.get_username }}{% endif %}</span></div><div class="tablewrap"><table><thead><tr><th>No.</th><th>Due</th><th class="r">Amount</th><th class="r">Paid</th><th class="r">Balance</th><th>Status</th></tr></thead><tbody>
+{% for it, paid, rem, late in schedule %}<tr><td>{% if it.number == 0 %}Advance{% else %}{{ it.number }}{% endif %}</td><td>{{ it.due_date|date:"d M Y" }}</td><td class="r">{{ it.amount|money:p.currency }}</td><td class="r">{{ paid|money:p.currency }}</td><td class="r">{{ rem|money:p.currency }}</td><td>{% if rem == 0 %}<span class="badge ok">Paid</span>{% elif late %}<span class="badge bad">{{ late }} days overdue</span>{% else %}<span class="badge info">Not yet due</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endif %}
+{% if is_staff or paid %}<section class="panel flush"><div class="panel__head"><h2>Payments</h2><span>Paid {{ paid|money:p.currency }} · Balance {{ balance|money:p.currency }} <span class="badge {% if p.payment_status == 'PAID' %}ok{% elif p.payment_status == 'UNPAID' %}bad{% else %}warn{% endif %}">{{ p.payment_status }}</span></span></div>
+{% if payments %}<div class="tablewrap"><table><thead><tr><th>Receipt</th><th>Date</th><th>Method</th><th>Status</th><th class="r">Amount</th><th></th></tr></thead><tbody>
+{% for x in payments %}<tr><td>{{ x.receipt_no|default:x.number }}</td><td>{{ x.paid_at|default:x.created_at|date:"d M Y" }}</td><td>{{ x.get_method_display }}{% if x.reference %} <small>{{ x.reference }}</small>{% endif %}</td><td><span class="badge {% if x.status == 'PAID' %}ok{% elif x.status == 'PENDING' %}info{% else %}bad{% endif %}">{{ x.get_status_display }}</span></td><td class="r">{{ x.amount|money:x.currency }}</td>
+<td class="r">{% if x.status == 'PAID' %}<a class="btn ghost small" href="{% url 'receipt_download' x.pk %}" target="_blank" rel="noopener">Receipt</a>{% elif x.status == 'PENDING' and can_collect %}<a class="btn ghost small" href="{% url 'payment_share' x.pk %}">Send link</a>
+<form method="post" action="{% url 'cancel_request' x.pk %}" style="display:inline" data-confirm="Cancel this payment request?">{% csrf_token %}<button class="btn ghost small" type="submit">Cancel</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+{% if can_collect and balance > 0 and p.status != 'PENDING_FAC' %}<div class="grid cols-2" style="padding:16px;gap:18px">
+<form method="post" action="{% url 'record_receipt' p.pk %}" novalidate>{% csrf_token %}<div class="sub"><strong>Issue receipt voucher</strong></div><div class="fields" style="margin-top:8px">
+{% include "includes/field.html" with field=pay_forms.receipt.amount w="w-6" %}{% include "includes/field.html" with field=pay_forms.receipt.method w="w-6" %}{% include "includes/field.html" with field=pay_forms.receipt.reference w="w-12" %}</div>
+<button class="btn small" type="submit" style="margin-top:10px">Record receipt</button></form>
+<form method="post" action="{% url 'request_payment' p.pk %}" novalidate>{% csrf_token %}<div class="sub"><strong>Request online payment</strong></div><div class="fields" style="margin-top:8px">
+{% include "includes/field.html" with field=pay_forms.request.amount w="w-6" %}{% include "includes/field.html" with field=pay_forms.request.narration w="w-6" %}</div>
+<button class="btn gold small" type="submit" style="margin-top:10px">Create payment link</button></form></div>{% endif %}</section>{% endif %}
+
+{% if fin_documents and is_staff %}<section class="panel flush"><div class="panel__head"><h2>Debit notes &amp; invoices</h2></div><div class="tablewrap"><table><tbody>
+{% for d in fin_documents %}<tr><td>{{ d.number }}</td><td>{{ d.get_doc_type_display }}</td><td>{{ d.issued_on|date:"d M Y" }}</td><td class="r">{{ d.total|money:d.currency }}</td><td class="r"><a class="btn ghost small" href="{% url 'fin_document_pdf' d.pk %}" target="_blank" rel="noopener">PDF</a></td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+
+{% if endorsements %}<section class="panel flush"><div class="panel__head"><h2>Endorsements</h2></div><div class="tablewrap"><table><thead><tr><th>Number</th><th>Type</th><th>Effective</th><th class="r">Premium</th><th class="r">Total</th></tr></thead><tbody>
+{% for e in endorsements %}<tr><td>{{ e.number }}</td><td>{{ e.get_endorsement_type_display }}</td><td>{{ e.effective_date|date:"d M Y" }}</td><td class="r">{{ e.premium_adjustment|money:p.currency }}</td><td class="r">{{ e.total|money:p.currency }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+
+{% if claims %}<section class="panel flush"><div class="panel__head"><h2>Claims</h2></div><div class="tablewrap"><table><tbody>{% for c in claims %}<tr><td><a href="{% url 'claim_detail' c.pk %}">{{ c.claim_no }}</a></td><td>{{ c.date_of_loss|date:"d M Y" }}</td><td>{{ c.get_loss_type_display }}</td><td>{% include "includes/status.html" with status=c.status label=c.get_status_display %}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+
+{% if is_staff and cessions %}<section class="panel flush"><div class="panel__head"><h2>Reinsurance distribution</h2><span class="muted">base currency</span></div><div class="tablewrap"><table><thead><tr><th>Layer</th><th class="r">Ceded</th><th class="r">Sum insured ceded</th><th class="r">Premium ceded</th></tr></thead><tbody>
+{% for c in cessions %}<tr><td>{% if c.is_facultative %}Facultative{% else %}{{ c.treaty.name }}{% endif %}{% if c.is_facultative and not c.fac_confirmed %} <span class="badge warn">Unplaced</span>{% endif %}</td><td class="r">{{ c.cession_pct|floatformat:2 }}%</td><td class="r">{{ c.sum_insured_ceded|money:"OMR" }}</td><td class="r">{{ c.premium_ceded|money:"OMR" }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+</div>
+<aside class="stack">
+<div class="summary"><h2>Premium</h2>
+<div class="row"><span>Net premium</span><span>{{ p.net_premium|money:p.currency }}</span></div><div class="row"><span>Fees</span><span>{{ p.fees|money:p.currency }}</span></div><div class="row"><span>VAT</span><span>{{ p.tax|money:p.currency }}</span></div>
+{% if p.voucher_discount %}<div class="row sub"><span>Voucher discount applied</span><span>−{{ p.voucher_discount|money:p.currency }}</span></div>{% endif %}
+<div class="total"><span>Total payable</span><strong>{{ p.total_payable|money:p.currency }}</strong></div>
+<p class="note">{{ p.start_date|date:"d M Y" }} to {{ p.end_date|date:"d M Y" }}{% if p.status == 'ACTIVE' %} · {{ p.days_to_expiry }} days left{% endif %}</p></div>
+{% if flex_rows %}<section class="panel"><h2>Additional information</h2><dl class="dl" style="grid-template-columns:110px 1fr">{% for l, v in flex_rows %}<dt>{{ l }}</dt><dd>{{ v }}</dd>{% endfor %}</dl></section>{% endif %}
+<section class="panel"><h2>Details</h2><dl class="dl" style="grid-template-columns:110px 1fr"><dt>Customer</dt><dd>{{ p.customer.name }}</dd><dt>ID / CR</dt><dd>{{ p.customer.identifier|default:"—" }}</dd><dt>Producer</dt><dd>{{ p.producer.get_username }}</dd><dt>Currency</dt><dd>{{ p.currency.code }} · {{ p.currency.name }}</dd><dt>Issued</dt><dd>{{ p.issued_at|date:"d M Y H:i" }}</dd></dl></section>
+{% if is_staff and commissions %}<section class="panel"><h2>Commission</h2>{% for c in commissions %}<div style="display:flex;justify-content:space-between;padding:4px 0"><span>{{ c.get_kind_display }} · {{ c.producer.get_username }}</span><span>{{ c.amount|money:"OMR" }}</span></div>{% endfor %}</section>{% endif %}
+</aside>
+</div>
+{% endblock %}

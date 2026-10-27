@@ -1,0 +1,1 @@
+{% with s=status %}<span class="badge {% if s in 'ACTIVE APPROVED ISSUED SETTLED CLOSED RECOVERED' %}ok{% elif s in 'PENDING PENDING_FAC OPEN ASSESSED PROPOSAL' %}warn{% elif s in 'CANCELLED REJECTED EXPIRED WRITTEN_OFF' %}bad{% else %}info{% endif %}">{{ label }}</span>{% endwith %}

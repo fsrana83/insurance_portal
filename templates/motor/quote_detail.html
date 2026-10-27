@@ -1,0 +1,57 @@
+{% extends "base.html" %}{% load money icons %}
+{% block title %}{{ p.number }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ p.number }}</h1><p>{{ p.product.name }} for {{ p.customer.name }} · {% include "includes/status.html" with status=p.status label=p.get_status_display %}</p></div>
+<div class="actions">
+{% if p.is_editable %}<a class="btn ghost" href="{% url 'quote_edit' p.pk %}">Edit</a>
+<form method="post" action="{% url 'quote_submit' p.pk %}">{% csrf_token %}<button class="btn" type="submit">Convert to proposal</button></form>{% endif %}
+
+{% if p.status == 'ISSUED' %}<a class="btn" href="{% url 'policy_detail' p.policy.pk %}">Open policy {{ p.policy.policy_no }}</a>{% endif %}
+</div></div>
+
+{% if p.status == 'APPROVED' and can_issue %}<section class="panel" style="margin-bottom:18px"><h2>Payment terms and issue</h2>{% if p.credit_history.all %}<p class="muted">Earlier credit requests: {% for h in p.credit_history.all %}{{ h.uid }} ({{ h.status|lower }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+<p class="muted">A policy is issued against a receipt for the premium, or on credit approved by Credit Control (up to {{ max_installments }} instalments, with an optional advance). Total premium: <strong>{{ p.total_payable|money:p.currency }}</strong>.</p>
+<div class="grid2" style="gap:18px;align-items:start">
+<form method="post" action="{% url 'issue' p.pk %}" data-confirm="Receive the premium and issue this policy?">{% csrf_token %}<input type="hidden" name="basis" value="CASH"><div class="sub"><strong>Cash basis: receipt required</strong></div>
+<div class="fields" style="margin-top:8px"><label>Received by<select class="input" name="method"><option value="CASH">Cash</option><option value="CHEQUE">Cheque</option><option value="TRANSFER">Bank transfer</option><option value="POS">Card (POS)</option></select></label><label>Cheque / transfer reference<input class="input" name="reference"></label></div>
+<button class="btn gold" type="submit" style="margin-top:10px">Receive {{ p.total_payable|money:p.currency }} and issue</button></form>
+<div><div class="sub"><strong>Credit basis: Credit Control approval</strong></div>
+{% if credit and credit.status == 'APPROVED' %}<div class="msg success" style="margin:8px 0">Approved by {{ credit.decided_by.get_username }}: {{ credit.installments }} instalment{{ credit.installments|pluralize }}{% if credit.advance_amount %} after an advance of {{ credit.advance_amount|money:p.currency }}{% endif %}.</div>
+<form method="post" action="{% url 'issue' p.pk %}" data-confirm="Issue this policy on credit?">{% csrf_token %}<input type="hidden" name="basis" value="CREDIT">{% if credit.advance_amount %}<div class="fields"><label>Advance received by<select class="input" name="method"><option value="CASH">Cash</option><option value="CHEQUE">Cheque</option><option value="TRANSFER">Bank transfer</option><option value="POS">Card (POS)</option></select></label><label>Reference<input class="input" name="reference"></label></div>{% endif %}<button class="btn gold" type="submit" style="margin-top:10px">Issue on credit</button></form>
+{% elif credit and credit.status == 'PENDING' %}<div class="msg warning" style="margin:8px 0">Awaiting Credit Control ({{ credit.uid }}): {{ credit.installments }} instalment{{ credit.installments|pluralize }}{% if credit.advance_amount %}, advance {{ credit.advance_amount|money:p.currency }}{% endif %}.</div>
+{% else %}{% if credit and credit.status == 'REJECTED' %}<div class="msg error" style="margin:8px 0">Credit request {{ credit.uid }} was declined: {{ credit.decision_note }}. You can submit a new request: it gets its own UID.</div>{% elif credit and credit.status == 'REFERRED' %}<div class="msg warning" style="margin:8px 0">Credit request {{ credit.uid }} was referred back by {{ credit.decided_by.get_username }}: {{ credit.decision_note }}. Correct it and resubmit.</div>{% endif %}
+<form method="post" action="{% url 'credit_request' p.pk %}">{% csrf_token %}<div class="fields" style="margin-top:8px"><label>Instalments (1 to {{ max_installments }})<input class="input" type="number" name="installments" min="1" max="{{ max_installments }}" value="3"></label><label>Advance (optional)<input class="input" name="advance" inputmode="decimal" placeholder="0"></label><label>Note<input class="input" name="note" maxlength="200"></label></div><button class="btn" type="submit" style="margin-top:10px">Request credit approval</button></form>{% endif %}
+</div></div></section>{% endif %}
+{% if p.status == 'APPROVED' or p.status == 'ISSUED' %}<section class="panel flush" style="margin-bottom:18px"><div class="panel__head"><h2>Post-dated cheques</h2></div>
+{% if p.pdcs.all %}<div class="tablewrap"><table><thead><tr><th>Cheque</th><th>Bank</th><th>Instalment</th><th>Cheque date</th><th class="r">Amount</th><th>Status</th><th></th></tr></thead><tbody>{% for c in p.pdcs.all %}<tr><td>{{ c.cheque_no }}</td><td>{{ c.bank }}</td><td>{% if c.installment_no is not None %}{{ c.installment_no }}{% endif %}</td><td>{{ c.cheque_date|date:"d M Y" }}</td><td class="r">{{ c.amount|money:p.currency }}</td><td>{{ c.get_status_display }}</td>
+<td>{% if c.status == 'RECEIVED' %}<form method="post" action="{% url 'pdc_status' c.pk 'deposited' %}" style="display:inline">{% csrf_token %}<button class="btn ghost small">Deposit</button></form>{% elif c.status == 'DEPOSITED' %}<form method="post" action="{% url 'pdc_status' c.pk 'cleared' %}" style="display:inline">{% csrf_token %}<button class="btn small">Cleared</button></form> <form method="post" action="{% url 'pdc_status' c.pk 'bounced' %}" style="display:inline">{% csrf_token %}<button class="btn danger small">Bounced</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% endif %}
+<form method="post" action="{% url 'pdc_add' p.pk %}" class="fields" style="padding:12px 16px">{% csrf_token %}<label>Cheque no.<input class="input" name="cheque_no" required></label><label>Bank<input class="input" name="bank" required></label><label>Amount<input class="input" name="amount" inputmode="decimal" required></label><label>Cheque date<input class="input" type="date" name="cheque_date" required></label><label>Instalment no.<input class="input" type="number" name="installment_no" min="0" max="12"></label><button class="btn ghost" type="submit">Record cheque</button></form></section>{% endif %}
+{% if p.is_expired %}<div class="msg warning">This quote expired on {{ p.valid_until|date:"d M Y" }}. Edit it to re-rate and extend its validity.</div>{% endif %}
+{% if p.status == 'PENDING' %}<div class="msg warning"><strong>Waiting for approval.</strong> {{ p.approval_reasons|join:"; " }}</div>{% endif %}
+{% if p.status == 'REJECTED' %}<div class="msg error"><strong>Rejected{% if p.decision_by %} by {{ p.decision_by.get_username }}{% endif %}.</strong> {{ p.decision_note }}</div>{% endif %}
+{% if can_decide %}<div class="panel" style="margin-bottom:18px"><form method="post" class="actions">{% csrf_token %}<input class="input" name="note" placeholder="Reason or note" style="max-width:340px" aria-label="Decision note">
+<button class="btn" formaction="{% url 'decide' p.pk 'approve' %}">Approve</button><button class="btn danger" formaction="{% url 'decide' p.pk 'reject' %}">Reject</button></form></div>{% endif %}
+
+<div class="grid side">
+<div class="stack">
+{% for r in risks %}
+<section class="panel"><div class="panel__head"><h2>{{ r.vehicle.make }} {{ r.vehicle.model }} {{ r.vehicle.year }}</h2><span class="muted">{{ r.vehicle.registration }}</span></div>
+<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:12px;color:var(--sea)"><div style="width:96px">{% icon r.vehicle.vehicle_type %}</div><div style="width:44px">{% icon r.vehicle.usage %}</div><span style="color:var(--ink-2)">{{ r.vehicle.get_vehicle_type_display }} · {{ r.vehicle.get_usage_display }} · {{ r.vehicle.cc }}cc · {{ r.vehicle.seats }} seats</span></div>
+<dl class="dl"><dt>Chassis</dt><dd>{{ r.vehicle.chassis_no }}</dd><dt>Engine</dt><dd>{{ r.vehicle.engine_no }} · {{ r.vehicle.color }}</dd>
+{% if p.product.includes_od %}<dt>Sum insured</dt><dd>{{ r.sum_insured|money:p.currency }}</dd><dt>Own damage</dt><dd>{{ r.od_premium|money:p.currency }}</dd>{% endif %}
+<dt>Third-party tariff</dt><dd>{{ r.tp_premium|money:p.currency }}</dd>
+{% for l in r.rider_lines %}<dt>{{ l.name }}</dt><dd>{{ l.amount }} {{ p.currency.code }}{% if l.mandatory %} <span class="badge info">Included</span>{% endif %}</dd>{% endfor %}
+{% for d in r.disc_lines %}<dt>{{ d.label }}</dt><dd>−{{ d.pct }}%</dd>{% endfor %}
+<dt>Premium</dt><dd><strong>{{ r.net_premium|money:p.currency }}</strong></dd></dl></section>
+{% endfor %}
+</div>
+<aside class="summary"><h2>Totals</h2>
+<div class="row"><span>Premium</span><span>{{ p.net_premium|money:p.currency }}</span></div>
+<div class="row sub"><span>Risk premium</span><span>{{ p.risk_premium|money:p.currency }}</span></div>
+<div class="row sub"><span>Expense loading</span><span>{{ p.expense_load|money:p.currency }}</span></div>
+<div class="row"><span>Policy fee</span><span>{{ p.fees|money:p.currency }}</span></div>
+<div class="row"><span>VAT</span><span>{{ p.tax|money:p.currency }}</span></div>
+<div class="total"><span>Total payable</span><strong>{{ p.total_payable|money:p.currency }}</strong></div>
+<p class="note">Period {{ p.start_date|date:"d M Y" }} to {{ p.end_date|date:"d M Y" }}. Quote valid until {{ p.valid_until|date:"d M Y" }}.{% if p.currency.code != base_currency %} Rate used: 1 {{ p.currency.code }} = {{ p.fx_rate|floatformat:4 }} {{ base_currency }}.{% endif %}</p></aside>
+</div>
+{% endblock %}

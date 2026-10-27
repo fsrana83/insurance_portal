@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Payment link{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Payment link {{ pay.number }}</h1><p>{{ pay.amount|money:pay.currency }} for policy {{ pay.policy.policy_no }}. Valid until {{ pay.expires_at|date:"d M Y" }}.</p></div></div>
+<section class="panel"><div class="field"><label for="lnk">Link</label><input class="input" id="lnk" value="{{ link }}" readonly onclick="this.select()"></div>
+<div class="field" style="margin-top:12px"><label for="txt">Message</label><textarea class="textarea" id="txt" rows="4" readonly>{{ text }}</textarea></div>
+<div class="actions" style="margin-top:14px">{% if wa %}<a class="btn gold" href="{{ wa }}">Send via WhatsApp Desktop</a>{% endif %}<a class="btn ghost" href="{% url 'policy_detail' pay.policy_id %}">Back to policy</a></div></section>
+{% endblock %}

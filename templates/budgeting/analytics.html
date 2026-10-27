@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load money budget_tags %}
+{% block title %}Budget vs actual{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Budget vs actual</h1><p>Actuals from the IFRS 17 ledger through <strong>{{ cutoff.1 }}/{{ cutoff.0 }}</strong> (last closed month). Favourable variances are green, adverse red.</p></div>
+{% if version %}<div class="actions"><a class="btn ghost" href="?{{ request.GET.urlencode }}&format=xlsx">Excel</a><a class="btn ghost" href="?{{ request.GET.urlencode }}&format=csv">CSV</a></div>{% endif %}</div>
+{% include "budgeting/_tabs.html" with tab="analytics" %}
+<form class="filters" method="get">
+<select class="select" name="year" aria-label="Year">{% for y in years %}<option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>{% endfor %}</select>
+<select class="select" name="version" aria-label="Budget">{% for b in budgets %}<option value="{{ b.pk }}" {% if version and b.pk == version.pk %}selected{% endif %}>{{ b.name }} · {{ b.get_status_display }}</option>{% endfor %}</select>
+<select class="select" name="mode" aria-label="Period"><option value="month" {% if mode == 'month' %}selected{% endif %}>Monthly</option><option value="quarter" {% if mode == 'quarter' %}selected{% endif %}>Quarterly</option><option value="year" {% if mode == 'year' %}selected{% endif %}>Annual</option></select>
+<select class="select" name="metric" aria-label="Metric">{% for k, l in metrics %}<option value="{{ k }}" {% if k == metric %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+<select class="select" name="product" aria-label="Product"><option value="">All products</option>{% for p in products %}<option value="{{ p.pk }}" {% if product == p.pk %}selected{% endif %}>{{ p.name }}</option>{% endfor %}</select>
+<input class="input" type="month" name="through" value="{{ through }}" aria-label="Last closed month">
+<select class="select" name="forecast" aria-label="Forecast"><option value="">Live projection</option>{% for f in forecasts %}<option value="{{ f.pk }}" {% if forecast and f.pk == forecast.pk %}selected{% endif %}>{{ f.name }}</option>{% endfor %}</select>
+<select class="select" name="method" aria-label="Projection method">{% for k, l in methods %}<option value="{{ k }}" {% if k == method %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+<button class="btn ghost" type="submit">Apply</button></form>
+{% if not version %}<div class="panel"><div class="empty"><strong>No budget for {{ year }}</strong>Create one under Budgets, then come back here.</div></div>{% else %}
+<div class="figs kpi-figs" style="margin-bottom:14px;grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">{% for k in kpis %}{% if k.metric == 'GWP' or k.metric == 'EARNED' or k.metric == 'CLAIMS' or k.metric == 'LOSS' or k.metric == 'COMBINED' %}
+<div class="fig"><div class="label">{% for m, l in metrics %}{% if m == k.metric %}{{ l }}{% endif %}{% endfor %} · YTD</div><div class="value">{{ k.ytd_actual|fmt:k.metric }}</div>
+<div class="sub">Budget {{ k.ytd_budget|fmt:k.metric }} · <span class="{{ k.fav|favcls }}">{% if k.metric == 'LOSS' or k.metric == 'COMBINED' %}{{ k.variance|signed:'LOSS' }}{% else %}{{ k.var_pct|pct1 }}{% endif %}</span></div>
+<div class="sub">Full-year outlook {{ k.fy_outlook|fmt:k.metric }} vs {{ k.fy_budget|fmt:k.metric }}</div></div>{% endif %}{% endfor %}</div>
+<section class="panel">{{ chart|safe }}</section>
+<div class="panel flush"><div class="tablewrap"><table class="var-table"><thead><tr><th>{{ metric_label }}</th><th class="r">Budget</th><th class="r">Budget to date</th><th class="r">Actual</th><th class="r">Variance</th><th class="r">Var %</th><th class="r">Prior year</th><th class="r">YoY</th><th class="r">Outlook</th></tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.label }}{% if r.partial %} <span class="badge warn">part</span>{% elif r.actual is None %} <span class="badge info">open</span>{% endif %}</td><td class="r">{{ r.budget|fmt:metric }}</td><td class="r">{{ r.budget_to_date|fmt:metric }}</td><td class="r"><strong>{{ r.actual|fmt:metric }}</strong></td>
+<td class="r {{ r.fav|favcls }}">{{ r.variance|signed:metric }}</td><td class="r {{ r.fav|favcls }}">{{ r.var_pct|pct1 }}</td><td class="r">{{ r.prior|fmt:metric }}</td><td class="r">{{ r.yoy|pct1 }}</td><td class="r">{{ r.outlook|fmt:metric }}</td></tr>{% endfor %}
+{% if total %}<tr class="total-row"><td><strong>Total</strong></td><td class="r"><strong>{{ total.budget|fmt:metric }}</strong></td><td class="r"><strong>{{ total.budget_to_date|fmt:metric }}</strong></td><td class="r"><strong>{{ total.actual|fmt:metric }}</strong></td><td class="r {{ total.fav|favcls }}"><strong>{{ total.variance|signed:metric }}</strong></td><td class="r {{ total.fav|favcls }}">{{ total.var_pct|pct1 }}</td><td class="r">{{ total.prior|fmt:metric }}</td><td></td><td class="r"><strong>{{ total.outlook|fmt:metric }}</strong></td></tr>{% endif %}
+</tbody></table></div></div>
+<p class="help">Budget to date covers closed months only, so a part-closed quarter is compared like for like. The outlook is {% if forecast %}taken from <strong>{{ forecast.name }}</strong>{% else %}projected live: actuals to the cut-off, then <em>{% for k, l in methods %}{% if k == method %}{{ l|lower }}{% endif %}{% endfor %}</em>{% endif %}. Ratios are computed from the component figures of each period.</p>
+{% endif %}
+{% endblock %}

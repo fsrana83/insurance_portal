@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Vehicles{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Vehicles</h1><p>One profile per vehicle for life, even when it changes hands.</p></div></div>
+<form class="filters" method="get"><input class="input" name="q" value="{{ q }}" placeholder="Chassis, plate, engine no., make / model, owner name, ID, mobile or policy no." aria-label="Search vehicles" style="min-width:360px"><button class="btn ghost" type="submit">Search</button></form>
+<div class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr><th>Vehicle</th><th>Plate</th><th>Chassis</th><th>Current owner</th><th>Policies</th><th>Cover</th></tr></thead><tbody>
+{% for r in rows %}<tr><td><a href="{% url 'vehicle_detail' r.v.pk %}">{{ r.v.make }} {{ r.v.model }} {{ r.v.year }}</a></td><td>{{ r.v.plate_code }} {{ r.v.plate_number }}</td><td><small>{{ r.v.chassis_no }}</small></td>
+<td><a href="{% url 'customer_detail' r.v.customer.pk %}">{{ r.v.customer.name }}</a></td><td>{{ r.n_policies }}</td>
+<td>{% if r.live %}<a href="{% url 'policy_detail' r.live.pk %}"><span class="badge ok">{{ r.live.policy_no }}</span></a>{% else %}<span class="badge warn">Not insured</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No vehicles found</strong>Try part of the chassis, plate or owner name.</div>{% endif %}</div>
+{% endblock %}

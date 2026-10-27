@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Approval queue</h1><p>Proposals outside the producer's authority. You can decide the ones inside your own limits.</p></div></div>
+<div class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr><th>Proposal</th><th>Customer</th><th>Producer</th><th>Why it needs approval</th><th class="r">Total</th><th></th></tr></thead><tbody>
+{% for p, can in rows %}<tr><td><a href="{% url 'quote_detail' p.pk %}">{{ p.number }}</a></td><td>{{ p.customer.name }}</td><td>{{ p.producer.get_username }}</td><td>{{ p.approval_reasons|join:"; " }}</td><td class="r">{{ p.total_payable|money:p.currency }}</td>
+<td class="r">{% if can %}<a class="btn small" href="{% url 'quote_detail' p.pk %}">Review</a>{% else %}<span class="badge warn">Needs underwriter</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>Nothing to approve</strong>New proposals that need a decision appear here.</div>{% endif %}</div>
+{% endblock %}

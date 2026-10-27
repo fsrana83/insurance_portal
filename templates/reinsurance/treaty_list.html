@@ -1,0 +1,12 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Reinsurance{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Reinsurance program</h1><p>Every policy is distributed through these treaties in rank order: quota share, then surplus, then facultative for anything above capacity.</p></div>
+<div class="actions"><a class="btn ghost" href="{% url 'fac_queue' %}">Facultative queue{% if fac_pending %} ({{ fac_pending }}){% endif %}</a>{% if role == 'UNDERWRITER' or role == 'ADMIN' %}<a class="btn gold" href="{% url 'treaty_create' %}">New treaty</a>{% endif %}</div></div>
+<div class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr><th>Rank</th><th>Treaty</th><th>Type</th><th>Reinsurer</th><th>Terms</th><th>Period</th><th>Capacity used</th></tr></thead><tbody>
+{% for r in rows %}{% with t=r.t %}<tr><td>{{ t.rank }}</td><td><a href="{% url 'treaty_detail' t.pk %}">{{ t.name }}</a><br><small>{{ t.reference }} · version {{ t.version }}{% if r.versions > 1 %} ({{ r.versions }} in history){% endif %}</small></td><td>{{ t.get_treaty_type_display }}{% if t.business == 'PNC' %} <span class="badge">P&amp;C</span>{% endif %}</td><td>{{ t.reinsurer.name }}</td>
+<td>{% if t.treaty_type == 'QUOTA' %}{{ t.cession_pct }}% ceded{% elif t.treaty_type == 'SURPLUS' %}Retention {{ t.retention|money:"OMR" }}{% else %}Retention {{ t.xol_retention|money:"OMR" }}, rate {{ t.rate_pct }}%{% endif %}</td>
+<td>{{ t.effective_from|date:"d M Y" }} – {{ t.effective_to|date:"d M Y" }}</td>
+<td style="min-width:160px">{% if r.pct is not None %}<div class="bar {% if r.pct > 90 %}crit{% elif r.pct > 70 %}hot{% endif %}"><span style="width:{{ r.pct|floatformat:0 }}%"></span></div><small>{{ r.pct|floatformat:0 }}% of {{ r.cap|money:"OMR" }}</small>{% else %}<span class="muted">—</span>{% endif %}</td></tr>{% endwith %}{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No treaties yet</strong>Create the first treaty to start distributing risk.</div>{% endif %}</div>
+{% endblock %}

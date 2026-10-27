@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}P&C quote{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{% if pol %}Edit quote {{ pol.number }}{% else %}New P&amp;C quote{% endif %}</h1><p>Choose the class and customer, then add the risks to be insured.</p></div></div>
+<form method="post" class="panel">{% csrf_token %}{{ form.non_field_errors }}
+<div class="formgrid">{% for f in form %}{% include "includes/field.html" with field=f w="w-6" %}{% endfor %}</div>
+<div class="actions"><button class="btn" type="submit">Save and add risks</button></div></form>
+{% endblock %}

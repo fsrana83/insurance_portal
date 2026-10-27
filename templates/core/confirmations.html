@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Confirmations{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Confirmations</h1><p>Changes to policies and claims are applied only after a second person confirms them.</p></div></div>
+<div class="tabs"><a class="btn {% if view == 'pending' %}{% else %}ghost{% endif %}" href="?view=pending">Waiting</a> <a class="btn {% if view == 'mine' %}{% else %}ghost{% endif %}" href="?view=mine">My requests</a> <a class="btn {% if view == 'all' %}{% else %}ghost{% endif %}" href="?view=all">All</a></div>
+<div class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr><th>No.</th><th>Record</th><th>Change</th><th>Requested by</th><th>Status</th><th></th></tr></thead><tbody>
+{% for p, can in rows %}<tr><td>{{ p.number }}<br><small>{{ p.requested_at|date:"d M Y H:i" }}</small></td>
+<td>{% if p.kind == 'pnc' %}{% if p.action|slice:':5' == 'claim' %}<a href="{% url 'pnc_claim_detail' p.object_id %}">{{ p.ref }}</a>{% else %}<a href="{% url 'pnc_policy_detail' p.object_id %}">{{ p.ref }}</a>{% endif %}{% elif p.kind == 'claim' %}<a href="{% url 'claim_detail' p.object_id %}">{{ p.ref }}</a>{% else %}<a href="{% url 'policy_detail' p.object_id %}">{{ p.ref }}</a>{% endif %}</td>
+<td><strong>{{ p.summary }}</strong>{% if p.reason %}<br><small>{{ p.reason }}</small>{% endif %}{% if p.result %}<br><small>{{ p.result }}</small>{% endif %}</td>
+<td>{{ p.requested_by.get_username }}</td><td>{{ p.get_status_display }}{% if p.reviewed_by %}<br><small>{{ p.reviewed_by.get_username }}</small>{% endif %}</td>
+<td>{% if can %}<form method="post" action="{% url 'confirmation_review' p.pk 'confirm' %}" style="display:inline">{% csrf_token %}<button class="btn small" type="submit">Confirm</button></form>
+<form method="post" action="{% url 'confirmation_review' p.pk 'reject' %}" style="display:inline">{% csrf_token %}<input class="input" name="note" placeholder="Reason" style="width:120px"><button class="btn danger small" type="submit">Reject</button></form>
+{% elif p.status == 'PENDING' %}<small>Needs another person</small>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>Nothing here</strong>No changes are waiting.</div>{% endif %}</div>
+{% endblock %}

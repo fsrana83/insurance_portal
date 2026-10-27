@@ -1,0 +1,25 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}IFRS 17 reports{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>IFRS 17 — premium allocation approach</h1><p>Reconciliations and insurance service result for the period. Amounts in {{ base_currency }}. Simplified PAA: no discounting, risk adjustment or onerous-contract component.</p></div>
+<div class="actions"><form method="post" action="{% url 'acc_run_revenue' %}">{% csrf_token %}<input type="hidden" name="through" value="{{ date_to|date:'Y-m-d' }}"><button class="btn gold" type="submit">Recognise revenue to {{ date_to|date:"d M Y" }}</button></form></div></div>
+{% include "accounting/_tabs.html" %}
+<form class="filters" method="get"><input class="input" type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" aria-label="From"><input class="input" type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" aria-label="To"><button class="btn ghost" type="submit">Apply</button>
+<span class="help">{% if last_run %}Revenue last recognised to {{ last_run|date:"d M Y" }}.{% else %}Revenue has not been recognised yet.{% endif %}</span></form>
+<div class="grid cols-2">
+<section class="panel"><h2>Liability for remaining coverage</h2><dl class="dl" style="grid-template-columns:1fr auto">
+<dt>Opening</dt><dd>{{ lrc.open|money:base_currency }}</dd><dt>+ Premiums written (incl. endorsements)</dt><dd>{{ lrc.written|money:base_currency }}</dd><dt>− Insurance revenue</dt><dd>{{ lrc.revenue|money:base_currency }}</dd><dt><strong>Closing</strong></dt><dd><strong>{{ lrc.close|money:base_currency }}</strong></dd></dl>
+{% if lrc.check %}<p class="ai-warn">Unreconciled difference: {{ lrc.check }}</p>{% else %}<p class="help">Reconciles.</p>{% endif %}</section>
+<section class="panel"><h2>Liability for incurred claims</h2><dl class="dl" style="grid-template-columns:1fr auto">
+<dt>Opening</dt><dd>{{ lic.open|money:base_currency }}</dd><dt>+ Claims incurred / reserves</dt><dd>{{ lic.incurred|money:base_currency }}</dd><dt>− Claims paid</dt><dd>{{ lic.paid|money:base_currency }}</dd><dt><strong>Closing</strong></dt><dd><strong>{{ lic.close|money:base_currency }}</strong></dd></dl>
+{% if lic.check %}<p class="ai-warn">Unreconciled difference: {{ lic.check }}</p>{% else %}<p class="help">Reconciles.</p>{% endif %}</section>
+<section class="panel"><h2>Reinsurance: remaining coverage</h2><dl class="dl" style="grid-template-columns:1fr auto">
+<dt>Opening</dt><dd>{{ arc.open|money:base_currency }}</dd><dt>+ Premiums ceded</dt><dd>{{ arc.ceded|money:base_currency }}</dd><dt>− Allocated to P&amp;L</dt><dd>{{ arc.alloc|money:base_currency }}</dd><dt><strong>Closing</strong></dt><dd><strong>{{ arc.close|money:base_currency }}</strong></dd></dl></section>
+<section class="panel"><h2>Reinsurance: incurred claims</h2><dl class="dl" style="grid-template-columns:1fr auto">
+<dt>Opening</dt><dd>{{ aic.open|money:base_currency }}</dd><dt>+ Recoverable on claims</dt><dd>{{ aic.recov|money:base_currency }}</dd><dt>− Received</dt><dd>{{ aic.recvd|money:base_currency }}</dd><dt><strong>Closing</strong></dt><dd><strong>{{ aic.close|money:base_currency }}</strong></dd></dl></section></div>
+<section class="panel" style="margin-top:18px"><h2>Insurance service result</h2><dl class="dl" style="grid-template-columns:1fr auto">
+<dt>Insurance revenue</dt><dd>{{ pl.revenue|money:base_currency }}</dd><dt>− Incurred claims</dt><dd>{{ pl.claims|money:base_currency }}</dd><dt>− Acquisition costs (commission)</dt><dd>{{ pl.acq|money:base_currency }}</dd>
+<dt><strong>Insurance service result (gross)</strong></dt><dd><strong>{{ pl.service_result|money:base_currency }}</strong></dd>
+<dt>− Reinsurance premium allocated</dt><dd>{{ pl.ri_alloc|money:base_currency }}</dd><dt>+ Reinsurance recoveries</dt><dd>{{ pl.ri_rec|money:base_currency }}</dd>
+<dt><strong>Net insurance service result</strong></dt><dd><strong>{{ pl.net|money:base_currency }}</strong></dd></dl></section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Flex fields{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Flex fields</h1><p>Add your own fields to customers, vehicles, quotes/policies and claims. They appear on the forms and on the policy schedule automatically.</p></div>
+<div class="actions"><a class="btn" href="{% url 'flex_new' %}">Add a field</a></div></div>
+{% for code, label in entities %}<section class="panel flush"><div class="panel__head"><h2>{{ label }}</h2></div>
+<div class="tablewrap"><table><thead><tr><th>Label</th><th>Key</th><th>Type</th><th>Required</th><th>Order</th><th>Status</th><th></th></tr></thead><tbody>
+{% for f in fields %}{% if f.entity == code %}<tr><td>{{ f.label }}</td><td><code>{{ f.key }}</code></td><td>{{ f.get_field_type_display }}</td><td>{{ f.required|yesno:"Yes,No" }}</td><td>{{ f.order }}</td>
+<td><span class="badge {% if f.active %}ok{% else %}warn{% endif %}">{% if f.active %}Active{% else %}Hidden{% endif %}</span></td>
+<td class="r"><a class="btn ghost small" href="{% url 'flex_edit' f.pk %}">Edit</a>
+<form method="post" action="{% url 'flex_toggle' f.pk %}" style="display:inline">{% csrf_token %}<button class="btn ghost small" type="submit">{% if f.active %}Hide{% else %}Show{% endif %}</button></form></td></tr>{% endif %}{% endfor %}
+</tbody></table></div></section>{% endfor %}
+<p class="help">Hiding a field keeps the data already captured; nothing is deleted.</p>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Reserve changes{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Reserve changes</h1><p>Changes above a handler's authority wait here for the Claims Manager.</p></div></div>
+<section class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr><th>When</th><th>Claim</th><th class="r">From</th><th class="r">To</th><th>Reason</th><th>By</th><th>Status</th><th></th></tr></thead><tbody>{% for r in rows %}<tr><td>{{ r.created_at|date:"d M Y H:i" }}</td><td><a href="{% url 'pnc_claim_detail' r.claim.pk %}">{{ r.claim.claim_no }}</a></td><td class="r">{{ r.old_reserve }}</td><td class="r">{{ r.new_reserve }}</td><td>{{ r.reason }}</td><td>{{ r.requested_by.get_username }}</td><td>{{ r.status }}{% if r.decided_by %}<br><small>{{ r.decided_by.get_username }}</small>{% endif %}</td>
+<td>{% if r.status == 'PENDING' %}<form method="post" action="{% url 'pnc_reserve_decide' r.pk 'approve' %}" style="display:inline">{% csrf_token %}<button class="btn gold" type="submit">Approve</button></form> <form method="post" action="{% url 'pnc_reserve_decide' r.pk 'reject' %}" style="display:inline">{% csrf_token %}<button class="btn ghost" type="submit">Reject</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty"><strong>No reserve changes yet</strong></div>{% endif %}</section>
+{% endblock %}

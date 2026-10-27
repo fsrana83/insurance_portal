@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Register P&C claim{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Register claim on {{ p.number }}</h1><p>{{ p.customer.name }} · {{ p.pnc_class.name }} · {{ p.start_date|date:"d M Y" }} – {{ p.end_date|date:"d M Y" }}</p></div></div>
+<form method="post" class="panel">{% csrf_token %}<div class="formgrid">
+<div class="field w-6"><label>Risk</label><select class="input" name="risk">{% for r in p.risks.all %}{% if r.active %}<option value="{{ r.pk }}">#{{ r.number }} {{ r.description }}</option>{% endif %}{% endfor %}</select></div>
+<div class="field w-6"><label>Date of loss</label><input class="input" type="date" name="date_of_loss" max="{{ today|date:'Y-m-d' }}" required></div>
+<div class="field w-6"><label>Cause</label><select class="input" name="cause">{% for k, v in causes %}<option value="{{ k }}">{{ v }}</option>{% endfor %}</select></div>
+<div class="field w-6"><label>Estimated loss (reserve, {{ p.currency.code }})</label><input class="input" name="reserve" inputmode="decimal" required></div>
+<div class="field w-12"><label>Location of loss</label><input class="input" name="location"></div>
+<div class="field w-12"><label>Description</label><textarea class="input" name="description" rows="3"></textarea></div>
+<div class="field w-12"><label><input type="checkbox" name="is_legal" value="1"> Legal action / third-party suit</label></div></div>
+<div class="actions"><button class="btn" type="submit">Register claim</button><a class="btn ghost" href="{% url 'pnc_policy_detail' p.pk %}">Cancel</a></div></form>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}AI models (Ollama){% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>AI models (local Ollama)</h1><p>Repair-cost estimates combine your own claims history with a local model. Nothing leaves your network. Host: <code>{{ info.host }}</code> (change it under Company setup).</p></div></div>
+{% if not info.ok %}<div class="msg warning"><strong>Ollama is not reachable.</strong> {{ info.error }}<br>Install Ollama, run <code>ollama serve</code> and pull a model, for example <code>ollama pull llama3.2</code>. Until then estimates use company data only.</div>{% endif %}
+<div class="panel flush"><div class="panel__head"><h2>Installed models ({{ info.models|length }})</h2><span class="help">{{ n_hist }} approved repair claims with a damage map feed the statistical baseline.</span></div>
+{% if info.models %}<form method="post">{% csrf_token %}<div class="tablewrap"><table><thead><tr><th></th><th>Model</th><th>Family</th><th>Parameters</th><th>Quantisation</th><th class="r">Size</th><th>Updated</th></tr></thead><tbody>
+{% for m in info.models %}<tr><td>{% if can_set %}<input type="radio" name="model" value="{{ m.name }}" {% if m.name == default %}checked{% endif %} aria-label="Use {{ m.name }}">{% endif %}</td><td><strong>{{ m.name }}</strong>{% if m.name == default %} <span class="badge ok">Default</span>{% endif %}</td><td>{{ m.family|default:"—" }}</td><td>{{ m.parameters|default:"—" }}</td><td>{{ m.quantization|default:"—" }}</td><td class="r">{{ m.size_gb }} GB</td><td>{{ m.modified }}</td></tr>{% endfor %}</tbody></table></div>
+{% if can_set %}<div class="actions" style="padding:14px"><button class="btn" type="submit">Save default model</button><button class="btn ghost" type="submit" name="model" value="">Use company data only</button></div>{% endif %}</form>
+{% elif info.ok %}<div class="empty"><strong>No models installed</strong>Run <code>ollama pull llama3.2</code> on the Ollama machine.</div>{% endif %}</div>
+{% endblock %}

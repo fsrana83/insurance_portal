@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{% if obj %}Edit{% else %}New{% endif %} flex field{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{% if obj %}Edit {{ obj.label }}{% else %}New flex field{% endif %}</h1></div></div>
+<form method="post" class="panel" novalidate>{% csrf_token %}{% include "includes/errors.html" %}<div class="fields">
+{% include "includes/field.html" with field=form.entity w="w-4" %}{% include "includes/field.html" with field=form.label w="w-4" %}{% include "includes/field.html" with field=form.key w="w-4" %}
+{% include "includes/field.html" with field=form.field_type w="w-4" %}{% include "includes/field.html" with field=form.order w="w-4" %}
+{% include "includes/field.html" with field=form.help_text w="w-4" %}{% include "includes/field.html" with field=form.choices w="w-12" %}
+<div class="field w-4 check"><label>{{ form.required }} Required</label></div><div class="field w-4 check"><label>{{ form.active }} Active</label></div></div>
+<div class="actions" style="margin-top:18px"><button class="btn" type="submit">Save</button><a class="btn ghost" href="{% url 'flex_list' %}">Cancel</a></div></form>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ n.subject }}{% endblock %}
+{% block content %}
+<p class="crumb"><a href="{% url 'claim_detail' c.pk %}">&larr; {{ c.claim_no }}</a></p>
+<div class="panel" style="max-width:760px"><p class="muted">{{ n.get_kind_display }} · {{ n.created_at|date:"d M Y" }} · {{ n.delivery }}</p>
+<p><strong>To:</strong> {{ n.to_name }} {% if n.to_email %}&lt;{{ n.to_email }}&gt;{% endif %}<br><strong>Subject:</strong> {{ n.subject }}</p>
+<pre style="white-space:pre-wrap;font-family:inherit">{{ n.body }}</pre>
+<p><button class="btn ghost" onclick="window.print()">Print</button> {% if n.to_email %}<a class="btn ghost" href="mailto:{{ n.to_email }}?subject={{ n.subject|urlencode }}&body={{ n.body|urlencode }}">Open in mail app</a>{% endif %}</p></div>
+{% endblock %}

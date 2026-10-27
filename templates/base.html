@@ -1,0 +1,60 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Home{% endblock %} · {{ app_name }}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/app.css' %}">
+{% block head %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<div class="topbar"><button id="burger" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button><strong>Advance Motor Insurance Solution</strong></div>
+<div class="app">
+<aside class="rail" id="rail">
+  <a class="brand" href="{% url 'dashboard' %}"><span class="brand__mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.500-3.200 7.800-8 9-4.800-1.200-8-4.500-8-9V6z"/></svg></span>Advance Motor Insurance Solution</a>
+  <nav class="nav" aria-label="Main">
+    <a href="{% url 'dashboard' %}" {% if request.path == '/' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.500"/><rect x="14" y="3" width="7" height="5" rx="1.500"/><rect x="14" y="12" width="7" height="9" rx="1.500"/><rect x="3" y="16" width="7" height="5" rx="1.500"/></svg>Dashboard</a>
+    {% if nav.new_quote %}<a href="{% url 'quote_create' %}" {% if request.path == '/quotes/new/' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>New quote</a>{% endif %}
+    {% if nav.quotes %}<a href="{% url 'quote_list' %}" {% if '/quotes/' in request.path and request.path != '/quotes/new/' %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6z"/><path d="M9 12h7M9 16h7"/></svg>Quotes &amp; proposals</a>{% endif %}
+    {% if nav.approvals %}<a href="{% url 'approval_queue' %}" {% if '/approvals/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.500l4.500 4.500L19 7.500"/></svg>Approvals{% if pending_approvals %}<span class="count">{{ pending_approvals }}</span>{% endif %}</a>{% endif %}
+    <a href="{% url 'policy_list' %}" {% if '/policies/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.500-3.200 7.800-8 9-4.800-1.200-8-4.500-8-9V6z"/></svg>Policies</a>
+    <a href="{% url 'claim_list' %}" {% if '/claims/' in request.path and '/providers/' not in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3l7 7-4 4-7-7zM3 21l7-7M9 7L4 12"/></svg>Claims</a>
+    {% if nav.customers %}<a href="{% url 'customer_list' %}" {% if '/customers/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8" r="3.500"/><path d="M2.500 20c0-4 3-6 6.500-6s6.500 2 6.500 6M16 4.500a3.500 3.500 0 010 7M18 14.500c2 .7 3.500 2.300 3.500 5.500"/></svg>Customers</a>{% endif %}
+    {% if nav.customers %}<a href="{% url 'vehicle_list' %}" {% if '/vehicles/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15v-3l2-5h14l2 5v3zM6 15v3M18 15v3M3 12h18"/></svg>Vehicles</a>{% endif %}
+    {% if nav.pnc %}<a href="{% url 'pnc_home' %}" {% if '/pnc/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l8-5 8 5v11zM9 20v-6h6v6"/></svg>Property &amp; Casualty</a>{% endif %}
+    {% if nav.reinsurance or nav.providers or nav.reports or nav.accounting or nav.budget or nav.payments or nav.vouchers %}<div class="nav__group">Back office</div>{% endif %}
+    {% if nav.credit %}<a href="{% url 'credit_list' %}" {% if '/credit/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18v12H3zM3 10h18M7 15h4"/></svg>Credit control{% if pending_credit %}<span class="count">{{ pending_credit }}</span>{% endif %}</a>{% endif %}
+    {% if nav.reinsurance %}<a href="{% url 'treaty_list' %}" {% if '/reinsurance/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg>Reinsurance{% if fac_pending %}<span class="count">{{ fac_pending }}</span>{% endif %}</a>{% endif %}
+    {% if nav.providers %}<a href="{% url 'provider_list' %}" {% if '/providers/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.500 5.500a4 4 0 00-5 5L3 17l4 4 6.500-6.500a4 4 0 005-5l-3 3-2.500-.5-.5-2.500z"/></svg>Service providers</a>{% endif %}
+    {% if nav.vouchers %}<a href="{% url 'voucher_list' %}" {% if '/vouchers/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9h8v8l-9 9zM15 7.5h.01"/></svg>Discount vouchers</a>{% endif %}
+    {% if nav.payments %}<a href="{% url 'payment_list' %}" {% if '/payments/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18v10H3zM3 11h18M7 15h3"/></svg>Receipts &amp; payments</a>{% endif %}
+    {% if nav.accounting %}<a href="{% url 'acc_transactions' %}" {% if '/accounting/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg>Accounting (IFRS 17)</a>{% endif %}
+    {% if nav.ai %}<a href="{% url 'ai_models' %}" {% if '/claims/ai/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a4 4 0 00-4 4v1H6a2 2 0 00-2 2v4a2 2 0 002 2h2v1a4 4 0 008 0v-1h2a2 2 0 002-2v-4a2 2 0 00-2-2h-2V7a4 4 0 00-4-4z"/></svg>AI models</a>{% endif %}
+    {% if nav.flex %}<a href="{% url 'flex_list' %}" {% if '/flex-fields/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h16"/></svg>Flex fields</a>{% endif %}
+    {% if nav.setup %}<a href="{% url 'company_setup' %}" {% if '/company/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V8l8-5 8 5v13zM9 21v-6h6v6"/></svg>Company setup</a>{% endif %}
+    {% if nav.setup %}<a href="{% url 'demo_data' %}" {% if '/demo-data/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7c0-1.700 3.600-3 8-3s8 1.300 8 3-3.600 3-8 3-8-1.300-8-3zM4 7v10c0 1.700 3.600 3 8 3s8-1.300 8-3V7"/></svg>Demo data</a>{% endif %}
+    {% if nav.budget %}<a href="{% url 'budget_analytics' %}" {% if '/budget' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 16v-5M11 16V6M16 16v-8M21 16V9"/></svg>Budget &amp; forecast</a>{% endif %}
+    {% if nav.reports %}<a href="{% url 'reports' %}" {% if '/reports/' in request.path or '/registers/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z"/></svg>Reports</a>{% endif %}
+    {% if nav.confirm %}<a href="{% url 'confirmations' %}" {% if '/confirmations/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg>Confirmations{% if pending_confirmations %} <span class="badge bad">{{ pending_confirmations }}</span>{% endif %}</a>{% endif %}
+    {% if nav.changelog %}<a href="{% url 'changelog' %}" {% if '/change-log/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5l3 2M3 12a9 9 0 1 0 3-6.7M3 4v4h4"/></svg>Change log</a>{% endif %}
+    <a href="{% url 'help' %}" {% if '/help/' in request.path %}aria-current="page"{% endif %}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.500 9.500a2.500 2.500 0 015 .5c0 1.500-2.500 2-2.500 3.500M12 17h.01"/></svg>Help &amp; guide</a>
+    {% if nav.admin %}<a href="{% url 'admin:index' %}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>Configuration</a>{% endif %}
+  </nav>
+  <div class="rail__foot"><strong>{{ user.get_full_name|default:user.username }}</strong>{{ role_label }}
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="linkbtn" type="submit">Sign out</button></form></div>
+</aside>
+<main class="main" id="main">
+  {% if messages %}<div class="msgs" role="status">{% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}</div>{% endif %}
+  {% block content %}{% endblock %}
+</main>
+</div>
+{% else %}{% block anon %}{% endblock %}{% endif %}
+{{ currency_json|json_script:"currency-data" }}
+<script src="{% static 'js/app.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

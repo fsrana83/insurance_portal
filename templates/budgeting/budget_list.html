@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Budgets{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Budgets &amp; forecasts</h1><p>Versioned plans by product and month in {{ base_currency }}. Approved versions become the baseline for budget-versus-actual analytics; actuals come straight from the IFRS 17 ledger.</p></div>
+{% if can_edit %}<div class="actions"><a class="btn" href="{% url 'budget_new' %}">New budget / forecast</a></div>{% endif %}</div>
+{% include "budgeting/_tabs.html" with tab="list" %}
+{% for y in years %}<section class="panel flush"><div class="panel__head"><h2>{{ y }}</h2></div><div class="tablewrap"><table><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Basis</th><th>Created</th><th></th></tr></thead><tbody>
+{% for v in versions %}{% if v.year == y %}<tr><td><a href="{% url 'budget_edit' v.pk %}">{{ v.name }}</a>{% if v.parent %}<div class="help">from {{ v.parent.name }}</div>{% endif %}</td><td>{{ v.get_kind_display }}</td>
+<td><span class="badge {% if v.status == 'DRAFT' %}warn{% elif v.status == 'APPROVED' %}ok{% else %}info{% endif %}">{{ v.get_status_display }}</span></td><td>{{ v.method|default:"—" }}</td><td>{{ v.created_at|date:"d M Y" }}</td>
+<td class="r"><a class="btn ghost small" href="{% url 'budget_edit' v.pk %}">Open</a>{% if v.kind == 'BUDGET' %} <a class="btn ghost small" href="{% url 'budget_analytics' %}?year={{ v.year }}&version={{ v.pk }}">Analyse</a>{% endif %}</td></tr>{% endif %}{% endfor %}</tbody></table></div></section>
+{% empty %}<div class="panel"><div class="empty"><strong>No budgets yet</strong>Create one from last year's actuals, then adjust it.</div></div>{% endfor %}
+{% endblock %}

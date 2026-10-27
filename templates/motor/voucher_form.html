@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ title }}</h1></div></div>
+<form method="post" class="panel" novalidate>{% csrf_token %}{% include "includes/errors.html" %}<div class="fields">
+{% for f in form %}{% if f.field.widget.input_type == 'checkbox' %}<div class="field w-4 check"><label>{{ f }} {{ f.label }}</label></div>{% else %}{% include "includes/field.html" with field=f w="w-4" %}{% endif %}{% endfor %}</div>
+<div class="actions" style="margin-top:18px"><button class="btn" type="submit">Save</button><a class="btn ghost" href="{% url 'voucher_list' %}">Cancel</a></div></form>
+{% if redemptions %}<section class="panel flush"><div class="panel__head"><h2>Redemptions</h2></div><div class="tablewrap"><table><thead><tr><th>Date</th><th>Policy</th><th>Customer</th><th class="r">Discount</th></tr></thead><tbody>
+{% for r in redemptions %}<tr><td>{{ r.redeemed_at|date:"d M Y" }}</td><td><a href="{% url 'policy_detail' r.policy_id %}">{{ r.policy.policy_no }}</a></td><td>{{ r.customer.name }}</td><td class="r">{{ r.amount|money:r.policy.currency }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}New budget{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>New budget or forecast</h1><p>Start blank, from last year's actuals, or by copying an existing version. Every new version is a draft until approved.</p></div></div>
+<form method="post" class="panel" novalidate>{% csrf_token %}<div class="fields">
+<div class="field w-4"><label for="name">Name</label><input class="input" id="name" name="name" placeholder="e.g. Budget {{ year }}"></div>
+<div class="field w-4"><label for="year">Year</label><input class="input" id="year" type="number" name="year" value="{{ year }}" min="2015" max="2100"></div>
+<div class="field w-4"><label for="kind">Type</label><select class="select" id="kind" name="kind"><option value="BUDGET">Budget</option><option value="FORECAST">Forecast (manual)</option></select></div>
+<div class="field w-4"><label for="source">Start from</label><select class="select" id="source" name="source"><option value="ACTUALS">Previous year's actuals (+ growth)</option><option value="COPY">Copy of an existing version (+ growth)</option><option value="BLANK">Blank</option></select></div>
+<div class="field w-4"><label for="pct">Growth / uplift %</label><input class="input" id="pct" type="number" step="0.1" name="pct" value="5"></div>
+<div class="field w-4"><label for="sv">Version to copy</label><select class="select" id="sv" name="source_version"><option value="">—</option>{% for v in versions %}<option value="{{ v.pk }}">{{ v.name }} ({{ v.get_status_display }})</option>{% endfor %}</select></div>
+<div class="field w-12"><label class="check"><input type="checkbox" name="normalise" checked> Cap one-off spikes when starting from actuals (recommended)</label></div>
+<div class="field w-12"><label for="note">Note</label><input class="input" id="note" name="note" maxlength="200"></div></div>
+<div class="actions" style="margin-top:16px"><button class="btn" type="submit">Create draft</button><a class="btn ghost" href="{% url 'budget_list' %}">Cancel</a></div></form>
+{% endblock %}

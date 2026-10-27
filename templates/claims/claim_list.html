@@ -1,0 +1,10 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Claims{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Claims</h1></div><div class="actions"><a class="btn ghost" href="{% url 'cat_list' %}">Catastrophe events</a><a class="btn gold" href="{% url 'claim_new' %}">Register claim</a></div></div>
+<div class="chips" style="margin-bottom:14px"><a class="chip" href="?" {% if not status %}aria-current="true"{% endif %}>All</a>{% for v, l in statuses %}<a class="chip" href="?status={{ v }}" {% if v == status %}aria-current="true"{% endif %}>{{ l }} · {{ counts|get_item:v }}</a>{% endfor %}</div>
+<form class="filters" method="get"><input class="input" name="q" value="{{ q }}" placeholder="Claim, policy or customer" aria-label="Search">{% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}<button class="btn ghost" type="submit">Search</button></form>
+<div class="panel flush">{% if claims %}<div class="tablewrap"><table><thead><tr><th>Claim</th><th>Policy</th><th>Customer</th><th>Loss</th><th>Status</th><th class="r">Reserve</th><th class="r">Net payable</th></tr></thead><tbody>
+{% for c in claims %}<tr><td><a href="{% url 'claim_detail' c.pk %}">{{ c.claim_no }}</a>{% if c.large_loss %} <span class="badge bad">Large loss</span>{% endif %}</td><td><a href="{% url 'policy_detail' c.policy.pk %}">{{ c.policy.policy_no }}</a></td><td>{{ c.policy.customer.name }}</td><td>{{ c.date_of_loss|date:"d M Y" }} · {{ c.get_loss_type_display }}</td><td>{% include "includes/status.html" with status=c.status label=c.get_status_display %}</td><td class="r">{{ c.reserve|money:c.policy.currency }}</td><td class="r">{{ c.net_payable|money:c.policy.currency }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No claims found</strong>Register a claim from a policy.</div>{% endif %}</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Discount vouchers{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Discount vouchers</h1><p>Vouchers reduce the discountable part of the premium (own damage and riders). The regulated TPL tariff is never discounted.</p></div>
+{% if can_issue %}<div class="actions"><a class="btn" href="{% url 'voucher_create' %}">Issue vouchers</a></div>{% endif %}</div>
+<form class="filters" method="get"><input class="input" name="q" value="{{ q }}" placeholder="Code or description"><button class="btn ghost" type="submit">Search</button></form>
+<div class="panel flush">{% if vouchers %}<div class="tablewrap"><table><thead><tr><th>Code</th><th>Description</th><th>Value</th><th>Valid</th><th>Used</th><th>Status</th><th></th></tr></thead><tbody>
+{% for v in vouchers %}<tr><td><strong>{{ v.code }}</strong></td><td>{{ v.description|default:"—" }}</td>
+<td>{% if v.discount_type == "PERCENT" %}{{ v.value|floatformat:"-2" }}%{% else %}{{ v.value|money:v.currency }}{% endif %}</td>
+<td>{{ v.valid_from|date:"d M Y" }} – {{ v.valid_to|date:"d M Y" }}</td><td>{{ v.used_count }}{% if v.max_uses %} / {{ v.max_uses }}{% endif %}</td>
+<td><span class="badge {% if v.status == 'Active' %}ok{% elif v.status == 'Scheduled' %}info{% else %}warn{% endif %}">{{ v.status }}</span></td>
+<td class="r">{% if can_issue %}<a class="btn ghost small" href="{% url 'voucher_edit' v.pk %}">Open</a>
+<form method="post" action="{% url 'voucher_toggle' v.pk %}" style="display:inline">{% csrf_token %}<button class="btn ghost small" type="submit">{% if v.active %}Deactivate{% else %}Activate{% endif %}</button></form>{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>{% else %}<div class="empty"><strong>No vouchers yet</strong>Issue a batch of codes to offer discounts at quotation.</div>{% endif %}</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>{{ title }}</h1>{% if tables.0.note %}<p>{{ tables.0.note }}</p>{% endif %}</div>
+{% if not waiting %}<div class="actions"><a class="btn ghost" href="?{{ request.GET.urlencode }}&format=csv">CSV</a><a class="btn" href="?{{ request.GET.urlencode }}&format=xlsx">Excel</a></div>{% endif %}</div>
+<p class="crumb"><a href="{% url 'reports' %}">&larr; All reports</a></p>
+<form class="filters" method="get"><input type="hidden" name="run" value="1">
+{% if mode == "asat" %}<label>As at <input class="input" type="date" name="as_at" value="{{ as_at|date:'Y-m-d' }}" required></label>
+{% else %}<label>From <input class="input" type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" required></label><label>To <input class="input" type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" required></label>{% endif %}
+{% if lr %}<select class="select" name="group" aria-label="Group by">{% for k, label in groups %}<option value="{{ k }}" {% if k == group %}selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+<label><input type="checkbox" name="only_claims" value="1" {% if only_claims %}checked{% endif %}> Only with claims</label>{% endif %}
+{% if commission %}
+<select class="select" name="ptype" aria-label="Producer type"><option value="BROKER" {% if ptype == "BROKER" %}selected{% endif %}>Brokers</option><option value="AGENT" {% if ptype == "AGENT" %}selected{% endif %}>Agents</option><option value="ALL" {% if ptype == "ALL" %}selected{% endif %}>Brokers and agents</option></select>
+<select class="select" name="producer" aria-label="Producer"><option value="">All</option>{% for x in producers %}<option value="{{ x.pk }}" {% if f.producer == x.pk|stringformat:"s" %}selected{% endif %}>{{ x.get_username }}</option>{% endfor %}</select>
+{% endif %}
+<button class="btn" type="submit">Run report</button></form>
+{% if waiting %}<div class="panel"><div class="empty"><strong>{% if error %}{{ error }}{% else %}Choose a period and run the report{% endif %}</strong>Nothing is shown until you select {% if mode == "asat" %}the date{% else %}the period{% endif %} and press <em>Run report</em>.</div></div>{% endif %}
+{% for t in tables %}
+<div class="panel flush" style="margin-bottom:18px"><div style="padding:12px 16px 4px"><h2 style="font-size:1.05rem">{{ t.title }}</h2>{% if forloop.counter0 > 0 and t.note %}<p class="help">{{ t.note }}</p>{% endif %}</div>
+{% if t.rows %}<div class="tablewrap"><table><thead><tr>{% for c, k in t.cols %}<th {% if k == "n" %}class="r"{% endif %}>{{ c }}</th>{% endfor %}</tr></thead><tbody>
+{% for r in t.shown %}<tr>{% for v in r %}<td {% if forloop.counter0 in t.num_idx %}class="r"{% endif %}>{% if forloop.counter0 in t.int_idx %}{{ v|floatformat:"0g" }}{% elif forloop.counter0 in t.num_idx %}{{ v|floatformat:"3g" }}{% elif v.year %}<span style="white-space:nowrap">{{ v|date:"d M Y" }}</span>{% else %}{{ v }}{% endif %}</td>{% endfor %}</tr>{% endfor %}
+{% if t.totals %}<tr style="font-weight:700;background:var(--surface-2,#f3f6f6)">{% for v in t.totals %}<td {% if forloop.counter0 in t.num_idx %}class="r"{% endif %}>{% if v != "" and forloop.counter0 in t.int_idx %}{{ v|floatformat:"0g" }}{% elif v != "" and forloop.counter0 in t.num_idx %}{{ v|floatformat:"3g" }}{% else %}{{ v }}{% endif %}</td>{% endfor %}</tr>{% endif %}
+</tbody></table></div>{% if t.rows|length > 1500 %}<p class="help" style="padding:0 16px 12px">Showing the first 1,500 of {{ t.rows|length }} lines. Export for everything.</p>{% endif %}
+{% else %}<div class="empty"><strong>Nothing to show</strong>No activity for these dates.</div>{% endif %}</div>
+{% endfor %}
+{% if slug == "broker-commission" and can_settle and not waiting %}
+<form method="post" action="{% url 'commission_settle' %}" class="filters panel" style="padding:14px;gap:10px">{% csrf_token %}
+<strong>Pay commission due</strong>
+<select class="select" name="producer" required><option value="">Choose broker / agent</option>{% for x in producers %}<option value="{{ x.pk }}">{{ x.get_username }}</option>{% endfor %}</select>
+<input class="input" name="reference" placeholder="Cheque / transfer ref.">
+<button class="btn" type="submit">Pay what is due</button>
+<span class="help">Pays commission on collected premium that has not been paid yet, and posts it to the ledger (Dr commission payable, Cr bank).</span></form>
+{% endif %}
+{% endblock %}

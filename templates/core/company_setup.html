@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Company setup{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Company setup</h1><p>These details are printed on every policy schedule, debit note, VAT invoice and receipt.</p></div></div>
+<form method="post" enctype="multipart/form-data" novalidate>{% csrf_token %}{% include "includes/errors.html" %}
+{% for title, fields in groups %}<section class="panel"><div class="panel__head"><h2>{{ title }}</h2></div><div class="fields">
+{% for f in fields %}{% include "includes/field.html" with field=f w="w-4" %}{% endfor %}</div>
+{% if title == "Identity" and company.logo %}<p class="help" style="margin-top:10px">Current logo: <img src="{{ company.logo.url }}" alt="" style="height:36px;vertical-align:middle"></p>{% endif %}
+</section>{% endfor %}
+<div class="actions"><button class="btn" type="submit">Save company details</button></div>
+</form>
+{% endblock %}

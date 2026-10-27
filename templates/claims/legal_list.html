@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Legal claims{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Legal claims</h1><p>Claims marked as legal, with their latest action and next hearing or deadline.</p></div></div>
+<div class="panel flush">{% if rows %}<div class="tablewrap"><table><thead><tr><th>Claim</th><th>Insured</th><th>Since</th><th>Latest action</th><th>Next date</th><th>Actions</th><th class="r">Legal cost</th></tr></thead><tbody>
+{% for r in rows %}<tr><td><a href="{% url 'claim_detail' r.c.pk %}#t-legal">{{ r.c.claim_no }}</a></td><td>{{ r.c.policy.customer.name }}</td><td>{{ r.c.legal_since|date:"d M Y" }}</td>
+<td>{% if r.last %}{{ r.last.get_action_type_display }} · {{ r.last.action_date|date:"d M Y" }}{% if r.last.case_no %} · {{ r.last.case_no }}{% endif %}{% else %}—{% endif %}</td><td>{{ r.next|date:"d M Y"|default:"—" }}</td><td>{{ r.n }}</td><td class="r">{{ r.cost|money:r.c.policy.currency }}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}<div class="empty"><strong>No legal claims</strong>Open a claim and mark it as legal on its Legal tab.</div>{% endif %}</div>
+{% endblock %}

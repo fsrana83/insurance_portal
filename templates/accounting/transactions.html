@@ -1,0 +1,16 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Accounting transactions{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Accounting transactions</h1><p>Double-entry journals generated from issuance, endorsements, receipts, claims, recoveries and IFRS 17 revenue recognition (PAA). Base currency {{ base_currency }}.</p></div>
+<div class="actions"><a class="btn ghost" href="?{{ request.GET.urlencode }}{% if request.GET %}&{% endif %}format=csv">Export CSV</a></div></div>
+{% include "accounting/_tabs.html" %}
+<form class="filters" method="get"><input class="input" type="date" name="from" value="{{ date_from|date:'Y-m-d' }}" aria-label="From"><input class="input" type="date" name="to" value="{{ date_to|date:'Y-m-d' }}" aria-label="To">
+<select class="select" name="type" aria-label="Entry type"><option value="">All entry types</option>{% for k, l in types %}<option value="{{ k }}" {% if f.type == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+<select class="select" name="account" aria-label="Account"><option value="">All accounts</option>{% for a in accounts %}<option value="{{ a.code }}" {% if f.account == a.code %}selected{% endif %}>{{ a.code }} {{ a.name }}</option>{% endfor %}</select>
+<input class="input" name="q" value="{{ f.q }}" placeholder="Policy / claim / narration"><button class="btn ghost" type="submit">Apply</button></form>
+<div class="figs" style="margin-bottom:14px"><div class="fig"><div class="label">Lines</div><div class="value">{{ n }}</div></div><div class="fig"><div class="label">Debit</div><div class="value">{{ debit|money:base_currency }}</div></div><div class="fig"><div class="label">Credit</div><div class="value">{{ credit|money:base_currency }}</div></div></div>
+<div class="panel flush"><div class="tablewrap"><table><thead><tr><th>Date</th><th>Entry</th><th>Type</th><th>Policy / claim</th><th>Account</th><th>Narration</th><th class="r">Debit</th><th class="r">Credit</th></tr></thead><tbody>
+{% for l in lines %}<tr><td>{{ l.entry.date|date:"d M Y" }}</td><td>{{ l.entry.number }}</td><td>{{ l.entry.get_entry_type_display }}</td><td>{% if l.entry.policy %}{{ l.entry.policy.policy_no }}{% elif l.entry.claim %}{{ l.entry.claim.claim_no }}{% else %}—{% endif %}</td><td>{{ l.account_id }} {{ l.account.name }}</td><td>{{ l.entry.narration }}</td>
+<td class="r">{% if l.debit %}{{ l.debit|money:base_currency }}{% endif %}</td><td class="r">{% if l.credit %}{{ l.credit|money:base_currency }}{% endif %}</td></tr>{% empty %}<tr><td colspan="8"><div class="empty"><strong>No transactions in this period</strong></div></td></tr>{% endfor %}</tbody></table></div></div>
+{% if truncated %}<p class="help">Showing the first 1,500 lines. Export for everything.</p>{% endif %}
+{% endblock %}

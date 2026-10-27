@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}P&C reports{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>P&amp;C reports</h1></div></div>
+<div class="panel flush"><div class="tablewrap"><table><tbody>{% for slug, name, n in items %}<tr><td><a href="{% url 'pnc_report' slug %}">{{ name }}</a></td><td class="r">{{ n }} rows</td><td><a href="{% url 'pnc_report' slug %}?csv=1">CSV</a></td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

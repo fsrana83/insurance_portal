@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load money %}
+{% block title %}Debit notes &amp; VAT invoices{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Debit notes, credit notes &amp; VAT invoices</h1><p>Raised automatically at issuance and on endorsements.</p></div></div>
+{% include "accounting/_tabs.html" %}
+<form class="filters" method="get"><input class="input" name="q" value="{{ f.q }}" placeholder="Number, policy or customer"><select class="select" name="type" aria-label="Type"><option value="">All types</option>{% for k, l in types %}<option value="{{ k }}" {% if f.type == k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select><button class="btn ghost" type="submit">Filter</button></form>
+<div class="panel flush"><div class="tablewrap"><table><thead><tr><th>Number</th><th>Type</th><th>Date</th><th>Policy</th><th>Customer</th><th class="r">VAT</th><th class="r">Total</th><th></th></tr></thead><tbody>
+{% for d in docs %}<tr><td>{{ d.number }}</td><td>{{ d.get_doc_type_display }}</td><td>{{ d.issued_on|date:"d M Y" }}</td><td><a href="{% url 'policy_detail' d.policy_id %}">{{ d.policy.policy_no }}</a></td><td>{{ d.customer.name }}</td><td class="r">{{ d.vat|money:d.currency }}</td><td class="r">{{ d.total|money:d.currency }}</td><td class="r"><a class="btn ghost small" href="{% url 'fin_document_pdf' d.pk %}" target="_blank" rel="noopener">PDF</a></td></tr>{% empty %}<tr><td colspan="8"><div class="empty"><strong>No documents found</strong></div></td></tr>{% endfor %}</tbody></table></div></div>
+{% endblock %}

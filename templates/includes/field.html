@@ -1,0 +1,3 @@
+<div class="field {{ w }}{% if field.errors %} has-error{% endif %}"{% if flag %} {{ flag }}{% endif %} data-endo-field="{{ field.name }}">
+{% if group %}<span class="lbl">{{ field.label }}{% if field.field.required %} <span class="req" aria-hidden="true">*</span>{% endif %}</span>{% else %}<label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>{% endif %}
+{{ field }}{% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}{{ field.errors }}</div>

@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% load money budget_tags %}
+{% block title %}Rolling forecast{% endblock %}
+{% block content %}
+<div class="pagehead"><div><h1>Rolling forecast</h1><p>The next {{ horizon }} months after {{ cutoff.1 }}/{{ cutoff.0 }}, rolling across year-end. It always moves forward with the latest actuals; budgets of the coming year are used when they exist.</p></div>
+<div class="actions"><a class="btn ghost" href="?{{ request.GET.urlencode }}&format=xlsx">Excel</a></div></div>
+{% include "budgeting/_tabs.html" with tab="forecast" %}
+<form class="filters" method="get"><input class="input" type="month" name="through" value="{{ through }}" aria-label="Last closed month">
+<select class="select" name="method">{% for k, l in methods %}<option value="{{ k }}" {% if k == method %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+<select class="select" name="metric">{% for k, l in metrics %}<option value="{{ k }}" {% if k == metric %}selected{% endif %}>{{ l }}</option>{% endfor %}</select>
+<select class="select" name="horizon"><option value="6" {% if horizon == 6 %}selected{% endif %}>6 months</option><option value="12" {% if horizon == 12 %}selected{% endif %}>12 months</option><option value="18" {% if horizon == 18 %}selected{% endif %}>18 months</option><option value="24" {% if horizon == 24 %}selected{% endif %}>24 months</option></select>
+<button class="btn ghost" type="submit">Apply</button></form>
+<section class="panel">{{ chart|safe }}</section>
+<div class="panel flush"><div class="tablewrap"><table><thead><tr><th>Month</th>{% for k in stored %}<th class="r">{% for m, l in metrics %}{% if m == k %}{{ l }}{% endif %}{% endfor %}</th>{% endfor %}</tr></thead><tbody>
+{% for r in rows %}<tr><td>{{ r.label }}</td>{% for k in stored %}<td class="r">{{ r|getk:k|fmt:k }}</td>{% endfor %}</tr>{% endfor %}
+<tr class="total-row"><td><strong>Total</strong></td>{% for k in stored %}<td class="r"><strong>{{ tot|getk:k|fmt:k }}</strong></td>{% endfor %}</tr></tbody></table></div></div>
+{% if saved %}<section class="panel flush" style="margin-top:14px"><div class="panel__head"><h2>Saved forecast versions</h2></div><div class="tablewrap"><table><tbody>{% for f in saved %}<tr><td><a href="{% url 'budget_edit' f.pk %}">{{ f.name }}</a></td><td>{{ f.method }}</td><td>{{ f.created_at|date:"d M Y" }}</td></tr>{% endfor %}</tbody></table></div></section>{% endif %}
+<p class="help">To freeze a calendar-year forecast open an approved budget and use <em>Create a forecast from this budget</em>. Methods: budget adjusted for year-to-date performance (factor capped 0.5–2), same month last year x recent growth, or the 3-month average. One-off spikes in the history (beyond 3 robust deviations) are capped before projecting so they do not repeat every year.</p>
+{% endblock %}

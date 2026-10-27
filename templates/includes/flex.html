@@ -1,0 +1,3 @@
+{% with bound=fl %}{% if bound %}<div class="fields flex-fields" style="margin-top:14px">
+{% for field in bound %}{% if field.field.widget.input_type == 'checkbox' %}<div class="field w-4 check"><label>{{ field }} {{ field.label }}</label></div>{% else %}{% include "includes/field.html" with field=field w=w|default:"w-4" %}{% endif %}{% endfor %}
+</div>{% endif %}{% endwith %}
